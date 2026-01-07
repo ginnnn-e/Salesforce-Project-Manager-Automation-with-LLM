@@ -83,6 +83,8 @@
         .sf-modal-content {
             padding: 1rem 0;
             background: #fff;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .sf-section-header {
@@ -96,11 +98,15 @@
             margin-top: 1rem;
             display: flex;
             align-items: center;
-            /* CHANGED: justify-content to flex-start for Left Alignment */
-            justify-content: flex-start; 
+            justify-content: space-between; 
+        }
+
+        .sf-section-header-left {
+            display: flex;
+            align-items: center;
         }
         
-        .sf-section-header::before {
+        .sf-section-header-left::before {
             content: '▼';
             font-size: 0.6rem;
             margin-right: 8px;
@@ -108,17 +114,49 @@
             display: inline-block;
         }
         
-        .sf-section-header span {
-            display: flex;
-            align-items: center;
-        }
-
         .sf-form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             column-gap: 2rem;
             row-gap: 1rem;
             padding: 0 2rem;
+        }
+
+        /* Dynamic Row Styling */
+        .product-row {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 0 2rem 1rem 2rem;
+            position: relative;
+            background-color: #fcfcfc;
+        }
+
+        .product-row:hover {
+            border-color: #b0c4df;
+        }
+
+        .product-row-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #0176d3;
+        }
+
+        .remove-row-btn {
+            color: #ea001e;
+            cursor: pointer;
+            font-size: 0.8rem;
+            background: none;
+            border: none;
+            text-decoration: underline;
+        }
+
+        .add-row-container {
+            padding: 0 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .sf-field {
@@ -338,6 +376,16 @@
         .popup-label { color: #706e6b; font-size: 0.85rem; font-weight: 600; }
         .popup-value { font-weight: 400; color: #080707; font-size: 0.9rem; text-align: right; max-width: 60%; }
 
+        /* Scrollable area for list of products in popup */
+        .popup-products-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            border: 1px solid #f3f3f3;
+            padding: 0.5rem;
+            background: #fafafa;
+        }
+        
         .popup-footer {
             background-color: #f3f3f3;
             padding: 1rem;
@@ -410,7 +458,7 @@
             <div class="sf-modal-content">
                 
                 <div class="sf-section-header">
-                    <span>AI Quick Import</span>
+                    <div class="sf-section-header-left">AI Quick Import</div>
                 </div>
                 
                 <div class="ai-input-container">
@@ -426,7 +474,9 @@
                 </div>
 
 
-                <div class="sf-section-header">Case Information</div>
+                <div class="sf-section-header">
+                    <div class="sf-section-header-left">Case Information</div>
+                </div>
                 
                 <div class="sf-form-grid">
                     <div class="sf-field">
@@ -453,49 +503,29 @@
                     </div>
                 </div>
 
-                <div class="sf-section-header">Product & Compliance Details</div>
-
-                <div class="sf-form-grid">
-                    <div class="sf-field">
-                        <label>Equipment Name <span class="required">*</span></label>
-                        <input type="text" class="sf-input" name="equipment" placeholder="" required>
-                    </div>
-
-                    <div class="sf-field">
-                        <label>Model Number <span class="required">*</span></label>
-                        <input type="text" class="sf-input" name="model" required>
-                    </div>
-
-                    <div class="sf-field">
-                        <label>Export Destination <span class="required">*</span></label>
-                        <select id="country" name="country" class="sf-input" required>
-                            <option value="">--None--</option>
-                            <option value="USA">United States</option>
-                            <option value="Germany">Germany</option>
-                            <option value="Japan">Japan</option>
-                            <option value="Vietnam">Vietnam</option>
-                            <option value="Singapore">Singapore</option>
-                        </select>
-                    </div>
-
-                    <div class="sf-field">
-                        <label>License Type</label>
-                        <select id="licenseType" name="licenseType" class="sf-input" required disabled>
-                            <option value="">--Select Country First--</option>
-                        </select>
-                    </div>
+                <div class="sf-section-header">
+                    <div class="sf-section-header-left">Product & Compliance Details</div>
                 </div>
 
-                <div class="sf-section-header">Quotation System (Automated)</div>
+                <!-- Container for Dynamic Product Rows -->
+                <div id="product-rows-container">
+                    <!-- Initial Row will be inserted by JS or kept static below -->
+                </div>
+
+                <div class="add-row-container">
+                     <button type="button" id="addRowBtn" class="sf-btn sf-btn-neutral">
+                        <i class="fas fa-plus" style="margin-right:5px;"></i> Add Another Product
+                    </button>
+                </div>
+
+                <div class="sf-section-header">
+                    <div class="sf-section-header-left">Quotation System (Automated)</div>
+                </div>
 
                 <div class="sf-form-grid">
-                    <div class="sf-field">
-                        <label>Assigned Project Manager</label>
-                        <div id="res-pm" class="sf-output-field" style="background:#f3f3f3;">[System Generated]</div>
-                    </div>
                     
                     <div class="sf-field">
-                        <label>Calculated Cost</label>
+                        <label>Calculated Cost (Total)</label>
                         <div id="res-price" class="sf-output-field" style="background:#f3f3f3;">[System Generated]</div>
                     </div>
 
@@ -528,25 +558,16 @@
                     <span class="popup-label">Contact Name:</span>
                     <span class="popup-value" id="popup-name">--</span>
                 </div>
-                <div class="popup-data-row">
-                    <span class="popup-label">Equipment:</span>
-                    <span class="popup-value" id="popup-equipment">--</span>
-                </div>
-                <div class="popup-data-row">
-                    <span class="popup-label">Model:</span>
-                    <span class="popup-value" id="popup-model">--</span>
-                </div>
-                <div class="popup-data-row">
-                    <span class="popup-label">License Type:</span>
-                    <span class="popup-value" id="popup-license">--</span>
+                
+                <div class="popup-label" style="margin-bottom:5px;">Products Licensed:</div>
+                <div class="popup-products-list" id="popup-products-container">
+                    <!-- Populated via JS -->
                 </div>
                 
                 <hr style="border:0; border-top:1px dashed #ddd; margin: 15px 0;">
 
-                <div class="popup-data-row">
-                    <span class="popup-label">Project Manager:</span>
-                    <span class="popup-value" id="popup-pm" style="color:#0176d3; font-weight:bold;">--</span>
-                </div>
+                <!-- Project Manager row removed -->
+                
                 <div class="popup-data-row">
                     <span class="popup-label">Total Cost:</span>
                     <span class="popup-value" id="popup-price">--</span>
@@ -574,8 +595,6 @@
 
 <script>
     const form = document.getElementById('salesforceForm');
-    const countrySelect = document.getElementById('country');
-    const licenseSelect = document.getElementById('licenseType');
     const submitBtn = document.getElementById('submitBtn');
     
     // AI Section Elements
@@ -588,31 +607,151 @@
     
     const successPopup = document.getElementById('successPopup');
     const popupName = document.getElementById('popup-name');
-    const popupEquipment = document.getElementById('popup-equipment');
-    const popupModel = document.getElementById('popup-model');
-    const popupLicense = document.getElementById('popup-license');
-    const popupPm = document.getElementById('popup-pm');
+    const popupProductsContainer = document.getElementById('popup-products-container');
+    // popupPm removed
     const popupPrice = document.getElementById('popup-price');
     const popupDownloadBtn = document.getElementById('popup-download-btn');
     const popupEmailText = document.getElementById('popup-email-text');
+    const mainResLink = document.getElementById('res-link');
+
+    // Dynamic Rows
+    const productRowsContainer = document.getElementById('product-rows-container');
+    const addRowBtn = document.getElementById('addRowBtn');
 
     // !!! REPLACE THIS WITH YOUR WEBHOOK URL !!!
-    const N8N_EXTRACT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook/d3b44853-8592-4d2c-b912-cc3b710e846d';
-    const N8N_SUBMIT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook/bcceb884-2cf4-4c6d-921c-a1ce2e93a40d';
+    const N8N_EXTRACT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook-test/d3b44853-8592-4d2c-b912-cc3b710e846d';
+    const N8N_SUBMIT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook-test/bcceb884-2cf4-4c6d-921c-a1ce2e93a40d';
 
     const licenseData = {
         "USA": ["FCC Certification", "Safety Check"],
         "Germany": ["CE Marking", "Safety Check"],
         "Japan": ["VCCI", "Safety Check"],
         "Vietnam": ["CR Mark", "Safety Check"],
-        "Singapore": ["Safety Mark", "IMDA Certification"]
+        "Singapore": ["Safety Mark", "IMDA Certification"],
+        "Australia": ["Safety Check"],
+        "Indonesia": ["CR Mark"]
     };
 
     let progressInterval = null;
 
-    countrySelect.addEventListener('change', updateLicenseDropdown);
+    // --- INITIALIZATION ---
+    // Add the first product row by default
+    addProductRow();
 
-    function updateLicenseDropdown() {
+    addRowBtn.addEventListener('click', () => {
+        addProductRow();
+    });
+
+    function addProductRow(data = {}) {
+        const index = document.querySelectorAll('.product-row').length + 1;
+        const div = document.createElement('div');
+        div.className = 'product-row';
+        div.innerHTML = `
+            <div class="product-row-header">
+                <span>Product Record #${index}</span>
+                ${index > 1 ? '<button type="button" class="remove-row-btn">Remove</button>' : ''}
+            </div>
+            <div class="sf-form-grid" style="padding:0; grid-template-columns: 1fr 1fr;">
+                <div class="sf-field">
+                    <label>Equipment Name</label> <!-- Optional: Removed * and required -->
+                    <input type="text" class="sf-input product-equipment" placeholder="" value="${data.equipment || ''}">
+                </div>
+
+                <div class="sf-field">
+                    <label>Model Number <span class="required">*</span></label>
+                    <input type="text" class="sf-input product-model" required value="${data.model || ''}">
+                </div>
+
+                <div class="sf-field">
+                    <label>Export Destination <span class="required">*</span></label>
+                    <select class="sf-input country-select" required>
+                        <option value="">--None--</option>
+                        <option value="USA">United States</option>
+                        <option value="Germany">Germany</option>
+                        <option value="Japan">Japan</option>
+                        <option value="Vietnam">Vietnam</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Indonesia">Indonesia</option>
+                    </select>
+                </div>
+
+                <div class="sf-field">
+                    <label>License Type</label>
+                    <select class="sf-input license-select" required disabled>
+                        <option value="">--Select Country First--</option>
+                    </select>
+                </div>
+            </div>
+        `;
+
+        productRowsContainer.appendChild(div);
+
+        // Setup Event Listeners for this specific row
+        const countrySelect = div.querySelector('.country-select');
+        const licenseSelect = div.querySelector('.license-select');
+        const removeBtn = div.querySelector('.remove-row-btn');
+
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                div.remove();
+                updateRowNumbers();
+            });
+        }
+
+        countrySelect.addEventListener('change', () => updateLicenseDropdown(countrySelect, licenseSelect));
+
+        // Pre-fill Country and License if data provided
+        if (data.country) {
+            // Find option case-insensitive
+            for (let i = 0; i < countrySelect.options.length; i++) {
+                if (countrySelect.options[i].value.toLowerCase() === data.country.toLowerCase()) {
+                    countrySelect.selectedIndex = i;
+                    break;
+                }
+            }
+            updateLicenseDropdown(countrySelect, licenseSelect);
+
+            if (data.license) {
+                let matchFound = false;
+                for (let i = 0; i < licenseSelect.options.length; i++) {
+                    if (licenseSelect.options[i].value === data.license) {
+                        licenseSelect.selectedIndex = i;
+                        matchFound = true;
+                        break;
+                    }
+                }
+                
+                // Requirement: if license not found, show error and default to first
+                if (!matchFound && data.license) {
+                    alert(`⚠️ License "${data.license}" not valid for ${countrySelect.value}. Defaulting to first available option.`);
+                    if (licenseSelect.options.length > 1) {
+                        licenseSelect.selectedIndex = 1; // 0 is placeholder
+                    }
+                } else if (!data.license) {
+                     // If country known but license missing/empty in extraction
+                     alert(`⚠️ No license specified for ${countrySelect.value}. Defaulting to first available option.`);
+                     if (licenseSelect.options.length > 1) {
+                        licenseSelect.selectedIndex = 1;
+                    }
+                }
+            } else if (countrySelect.value && !data.license) {
+                // Country selected but no license provided at all
+                if (licenseSelect.options.length > 1) {
+                    licenseSelect.selectedIndex = 1;
+                }
+            }
+        }
+    }
+
+    function updateRowNumbers() {
+        const headers = document.querySelectorAll('.product-row-header span');
+        headers.forEach((span, i) => {
+            span.textContent = `Product Record #${i + 1}`;
+        });
+    }
+
+    function updateLicenseDropdown(countrySelect, licenseSelect) {
         const selectedCountry = countrySelect.value;
         licenseSelect.innerHTML = '';
         
@@ -670,7 +809,7 @@
         progressBar.style.width = '100%';
     }
 
-    // --- NEW: AI Extraction Logic ---
+    // --- AI Extraction Logic ---
     aiExtractBtn.addEventListener('click', async () => {
         const textToExtract = aiInputText.value.trim();
         
@@ -679,13 +818,11 @@
             return;
         }
 
-        // UI Loading State
         const originalBtnText = aiExtractBtn.innerHTML;
         aiExtractBtn.innerHTML = '<div class="spinner spinner-dark"></div> Analyzing...';
         aiExtractBtn.disabled = true;
 
         try {
-            // Send payload with type: 'extract' so N8N If node can distinguish
             const response = await fetch(N8N_EXTRACT_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -698,68 +835,63 @@
             const textResponse = await response.text();
             if (!textResponse) throw new Error("Empty response from extraction server.");
             
-            // --- PARSING FIX START ---
-            let data = JSON.parse(textResponse);
+            const rootData = JSON.parse(textResponse);
+            let itemsToProcess = [];
             
-            // Handle array wrapper [ ... ]
-            if (Array.isArray(data) && data.length > 0) {
-                data = data[0];
-            }
-
-            // Handle "output" wrapper [ { output: [ ... ] } ]
-            if (data.output && Array.isArray(data.output) && data.output.length > 0) {
-                data = data.output[0];
-            }
-
-            // Handle "body" wrapper [ { output: [ { body: { ... } } ] } ]
-            const fields = data.body || data;
-            // --- PARSING FIX END ---
-
-            console.log("Extracted Data:", fields);
-
-            // Populate Fields (using optional chaining/defaults)
-            if (fields.contact_name) form.customerName.value = fields.contact_name;
-            if (fields.company) form.company.value = fields.company;
-            if (fields.email || fields.contact_email) form.email.value = fields.email || fields.contact_email;
-            if (fields.equipment_name) form.equipment.value = fields.equipment_name;
-            if (fields.model_number) form.model.value = fields.model_number;
-            
-            // Handle Country + License Dependency
-            const extractedCountry = fields.export_destination || fields.country;
-            if (extractedCountry) {
-                // Try to match the country string to our Select options
-                for (let i = 0; i < countrySelect.options.length; i++) {
-                    if (countrySelect.options[i].value.toLowerCase() === extractedCountry.toLowerCase()) {
-                        countrySelect.selectedIndex = i;
-                        break;
-                    }
-                }
+            // --- NEW: Handle logic for [ { "output": [ { "body": ... }, ... ] } ] ---
+            if (Array.isArray(rootData) && rootData.length > 0 && rootData[0].output && Array.isArray(rootData[0].output)) {
+                // Extract the 'body' from each item in the output array
+                itemsToProcess = rootData[0].output.map(item => item.body || item);
+            } 
+            // --- Fallback logic for previous/legacy structures ---
+            else {
+                let flatData = rootData;
+                if (Array.isArray(flatData) && flatData.length > 0) flatData = flatData[0];
                 
-                // Trigger the update logic manually
-                updateLicenseDropdown();
-                
-                // Now set License if available
-                const extractedLicense = fields.license_type;
-                if (extractedLicense) {
-                    let matchFound = false;
-                    
-                    // Try to match exactly with available options
-                    for (let i = 0; i < licenseSelect.options.length; i++) {
-                        if (licenseSelect.options[i].value === extractedLicense) {
-                            licenseSelect.selectedIndex = i;
-                            matchFound = true;
-                            break;
-                        }
-                    }
-                    
-                    // Strict Validation: If no match, show error and do not fill
-                    if (!matchFound) {
-                         alert(`⚠️ AI Error: The license type "${extractedLicense}" is not valid for ${countrySelect.value}. Please select from the available options.`);
-                    }
+                if (flatData.output && Array.isArray(flatData.output)) {
+                     itemsToProcess = flatData.output.map(item => item.body || item);
+                } else if (flatData.products && Array.isArray(flatData.products)) {
+                     itemsToProcess = flatData.products;
+                } else if (flatData.items && Array.isArray(flatData.items)) {
+                     itemsToProcess = flatData.items;
+                } else {
+                     // Single flat object fallback
+                     itemsToProcess = [flatData.body || flatData];
                 }
             }
+
+            console.log("Extracted Items:", itemsToProcess);
             
-            // Visual feedback
+            if (itemsToProcess.length > 0) {
+                // 1. Fill Global Fields (Contact, Company, etc.) from the FIRST record
+                const firstRecord = itemsToProcess[0];
+                
+                if (firstRecord.contact_name) form.customerName.value = firstRecord.contact_name;
+                if (firstRecord.company) form.company.value = firstRecord.company;
+                
+                // Handle different email key variations
+                if (firstRecord.contact_email) form.email.value = firstRecord.contact_email;
+                else if (firstRecord.email) form.email.value = firstRecord.email;
+                
+                // 2. Clear existing rows
+                productRowsContainer.innerHTML = '';
+
+                // 3. Create Product Rows for EVERY item found
+                itemsToProcess.forEach(item => {
+                    const rowData = {
+                        equipment: item.equipment_name || item.equipment,
+                        model: item.model_number || item.model,
+                        country: item.export_destination || item.country,
+                        license: item.license_type || item.license
+                    };
+                    addProductRow(rowData);
+                });
+            } else {
+                // If the array was empty for some reason, just ensure one empty row exists
+                productRowsContainer.innerHTML = '';
+                addProductRow();
+            }
+            
             aiExtractBtn.innerHTML = '<i class="fas fa-check"></i> Filled!';
             setTimeout(() => {
                 aiExtractBtn.innerHTML = originalBtnText;
@@ -775,7 +907,7 @@
     });
 
 
-    // --- Existing Submit Logic (Modified to include action type) ---
+    // --- Submit Logic ---
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -783,83 +915,195 @@
         submitBtn.disabled = true;
         simulateProgress();
 
-        const formData = {
-            action: 'submit', // Signal to N8N If node this is final submission
-            contact_name: form.customerName.value,
-            company: form.company.value,
-            contact_email: form.email.value,
-            equipment_name: form.equipment.value,
-            model_number: form.model.value,
-            export_destination: form.country.value,
-            license_type: form.licenseType.value,
-            timestamp: new Date().toISOString()
-        };
+        const contactName = form.customerName.value;
+        const contactEmail = form.email.value;
+        
+        const payload = [];
+        const productRows = document.querySelectorAll('.product-row');
+        
+        productRows.forEach(row => {
+            const country = row.querySelector('.country-select').value;
+            const lic = row.querySelector('.license-select').value;
+
+            payload.push({
+                contact_name: contactName,
+                contact_email: contactEmail,
+                country: country,
+                license_type: lic
+            });
+        });
 
         try {
             const response = await fetch(N8N_SUBMIT_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             });
 
-            // Read as text first to handle empty responses from n8n
             const textResponse = await response.text();
+            if (!textResponse) throw new Error("Server returned empty response.");
             
-            if (!textResponse) {
-                throw new Error("Server returned empty response.");
-            }
-
-            let result;
-            try {
-                result = JSON.parse(textResponse);
-            } catch (jsonError) {
-                throw new Error("Server returned invalid JSON: " + textResponse);
-            }
-
+            const resultData = JSON.parse(textResponse);
+            
             if (!response.ok) throw new Error(`Server status: ${response.status}`);
             
             finishProgress();
 
-            if (Array.isArray(result) && result.length > 0) result = result[0];
-            if (result.body && typeof result.body === 'object') result = result.body;
+            // --- REVISED PARSING LOGIC (Handles complex nested arrays) ---
+            let resultItems = [];
+            let metadataSource = {};
 
-            const price = result['Base_Price'] || result['price'] || result['cost'] || 'Pending';
-            const currency = result['Currency'] || '';
-            const manager = result['PM_Name'] || result['manager'] || 'Assigned Manager';
-            const emailDraft = result['Email'] || "Email text not found in response."; 
-
-            let pdfUrl = null;
-            if (result.data && result.data.url) {
-                pdfUrl = result.data.url;
-            } else if (result.pdf_url) {
-                pdfUrl = result.pdf_url;
-            } else if (result.url) {
-                pdfUrl = result.url;
-            }
-
-            document.getElementById('res-pm').innerText = manager;
-            document.getElementById('res-price').innerText = price + " " + currency;
-            
-            const pdfLink = document.getElementById('res-link');
-            if (pdfUrl) {
-                pdfLink.href = pdfUrl;
-                pdfLink.style.display = 'inline';
-            }
-
-            popupName.innerText = formData.contact_name;
-            popupEquipment.innerText = formData.equipment_name;
-            popupModel.innerText = formData.model_number;
-            popupLicense.innerText = formData.license_type;
-            
-            popupPm.innerText = manager;
-            if (!isNaN(parseFloat(price))) {
-                popupPrice.innerText = price + " " + currency; 
+            // 1. Identify Root Object
+            let rootObj = {};
+            if (Array.isArray(resultData)) {
+                rootObj = resultData[0]; // Take first item if array
             } else {
-                popupPrice.innerText = price;
+                rootObj = resultData;
             }
 
+            // 2. Identify Item List (Crucial fix for dynamic rows)
+            // Fix: Check for 'licenses' based on user reference first
+            if (rootObj && Array.isArray(rootObj.licenses)) {
+                resultItems = rootObj.licenses;
+                metadataSource = rootObj;
+            }
+            // If the root object contains a 'data' array, use THAT as the list of products
+            else if (rootObj && Array.isArray(rootObj.data)) {
+                resultItems = rootObj.data;
+                metadataSource = rootObj; // The wrapper contains metadata like url
+            } 
+            // Else try standard locations
+            else if (rootObj && Array.isArray(rootObj.body)) {
+                 resultItems = rootObj.body;
+                 metadataSource = rootObj;
+            } else if (Array.isArray(resultData)) {
+                 resultItems = resultData; // The root array IS the list
+                 metadataSource = resultData[0];
+            } else {
+                 resultItems = [resultData];
+                 metadataSource = resultData;
+            }
+            
+            // Normalize items (unwrap .body if present in items)
+            resultItems = resultItems.map(item => {
+                if (item && item.body && typeof item.body === 'object') {
+                    return { ...item.body, _original: item };
+                }
+                return item;
+            });
+            
+            // --- RESULT PARSING ---
+            const currency = metadataSource['Currency'] || resultItems[0]?.Currency || '$';
+            const emailDraft = metadataSource['Email'] || "Email text not found in response."; 
+            
+            // Handle Price Summation
+            let finalPriceDisplay = 'Pending';
+            let totalPrice = 0;
+            let priceFound = false;
+
+            // Check if root object has a total price
+            if (metadataSource['total_price']) {
+                finalPriceDisplay = metadataSource['total_price'];
+            } 
+            // Otherwise sum up items
+            else if (resultItems.length > 0) {
+                resultItems.forEach(item => {
+                    // Try different price keys: 'price', 'Base_Price', 'cost'
+                    const p = parseFloat(item.Base_Price || item.price || item.cost || 0);
+                    if (!isNaN(p)) {
+                        totalPrice += p;
+                        priceFound = true;
+                    }
+                });
+                if (priceFound) finalPriceDisplay = totalPrice.toFixed(2);
+            }
+
+            // Document URL - SUPER ROBUST CHECK
+            // We search in multiple places: metadataSource, the root array/object, inside 'body', inside 'data', or the first item of the results.
+            let pdfUrl = null;
+            
+            // Helper function to check an object for url-like keys
+            const findUrl = (obj) => {
+                if (!obj || typeof obj !== 'object') return null;
+                return obj.url || obj.pdf_url || obj.invoice_url || obj.file_url || obj.link || obj.download_link;
+            };
+
+            // 1. Check metadata source (the wrapper or first item)
+            pdfUrl = findUrl(metadataSource);
+
+            // 2. Check if it's inside a 'body' property of metadataSource
+            if (!pdfUrl && metadataSource.body) {
+                pdfUrl = findUrl(metadataSource.body);
+            }
+            
+            // 3. Check if it's inside a 'data' property
+            if (!pdfUrl && metadataSource.data && !Array.isArray(metadataSource.data)) {
+                 pdfUrl = findUrl(metadataSource.data);
+            }
+
+            // 4. Check the first item of the result list (often where row-specific data ends up)
+            if (!pdfUrl && resultItems.length > 0) {
+                pdfUrl = findUrl(resultItems[0]);
+                // Check unwrapped original if it exists
+                if (!pdfUrl && resultItems[0]._original) {
+                    pdfUrl = findUrl(resultItems[0]._original);
+                }
+            }
+            
+            // 5. Hard fallback: Check rootData top level if it's an object
+            if (!pdfUrl && !Array.isArray(resultData)) {
+                pdfUrl = findUrl(resultData);
+            }
+
+            console.log("Extracted PDF URL:", pdfUrl);
+
+            // --- UPDATE UI ---
+            document.getElementById('res-price').innerText = finalPriceDisplay + " " + currency;
+            
+            // Update Main Form Link
+            if (pdfUrl) {
+                mainResLink.href = pdfUrl;
+                mainResLink.style.display = 'inline'; // Make it visible
+            } else {
+                mainResLink.style.display = 'none';
+            }
+
+            // --- POPUP DATA POPULATION ---
+            popupName.innerText = contactName;
+            
+            // Populate Popup Product List dynamically from RESPONSE DATA
+            popupProductsContainer.innerHTML = '';
+            
+            resultItems.forEach((item, index) => {
+                let itemPrice = "0.00";
+                // Prioritize 'Base_Price' as per user reference
+                const pVal = parseFloat(item.Base_Price || item.price || item.cost || 0);
+                if (!isNaN(pVal)) itemPrice = pVal.toFixed(2);
+
+                const itemCountry = item.Country || item.export_destination || item.country || "Unknown";
+                const itemLicense = item.License_Type || item.license_type || item.license || "Standard License";
+                const itemCurrency = item.Currency || currency;
+
+                const pDiv = document.createElement('div');
+                pDiv.className = 'popup-data-row';
+                pDiv.style.borderBottom = '1px dashed #ddd';
+                
+                pDiv.innerHTML = `
+                    <div style="text-align:left;">
+                        <div style="font-size:0.8rem; color:#555;">Record #${index + 1} (${itemCountry})</div>
+                        <div style="font-size:0.85rem; font-weight:bold;">${itemLicense}</div>
+                    </div>
+                    <div style="font-size:0.9rem; font-weight:bold; color:#04844b;">
+                        ${itemPrice} ${itemCurrency}
+                    </div>
+                `;
+                popupProductsContainer.appendChild(pDiv);
+            });
+            
+            popupPrice.innerText = finalPriceDisplay + " " + currency;
             popupEmailText.value = emailDraft;
 
+            // Update Popup Download Button
             if (pdfUrl) {
                 popupDownloadBtn.href = pdfUrl;
                 popupDownloadBtn.style.display = 'inline-flex';
