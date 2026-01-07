@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Case: Global Licensing | Salesforce</title>
+    
+    <style>
+        /* SALESFORCE LIGHTNING DESIGN SYSTEM SIMULATION */
+        :root {
+            --sf-blue: #0176d3;
+            --sf-bg: #b0c4df;
+            --sf-header-bg: #f3f3f3;
+            --sf-border: #dddbda;
+            --sf-text-main: #080707;
+            --sf-text-light: #3e3e3c;
+            --sf-input-border: #747474;
+            --sf-focus: #0176d3;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--sf-bg);
+            background-image: url('https://www.salesforce.com/content/dam/web/en_us/www/images/home/bg-blue-texture.jpg');
+            background-size: cover;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        /* --- MAIN FORM MODAL --- */
+        .sf-modal {
+            background: #fff;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sf-modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid var(--sf-border);
+            background: #f3f3f3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        /* --- PROGRESS BAR CSS --- */
+        .progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #e0e0e0;
+            display: none; /* Hidden by default */
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--sf-blue);
+            width: 0%;
+            transition: width 0.3s ease-in-out;
+        }
+
+        .sf-modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 300;
+            color: var(--sf-text-main);
+        }
+
+        .sf-modal-content {
+            padding: 1rem 0;
+            background: #fff;
+        }
+
+        .sf-section-header {
+            background-color: #f3f3f3;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--sf-text-light);
+            margin-bottom: 1rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            /* CHANGED: justify-content to flex-start for Left Alignment */
+            justify-content: flex-start; 
+        }
+        
+        .sf-section-header::before {
+            content: '▼';
+            font-size: 0.6rem;
+            margin-right: 8px;
+            color: var(--sf-text-light);
+            display: inline-block;
+        }
+        
+        .sf-section-header span {
+            display: flex;
+            align-items: center;
+        }
+
+        .sf-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 2rem;
+            row-gap: 1rem;
+            padding: 0 2rem;
+        }
+
+        .sf-field {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid transparent;
+        }
+
+        .sf-field label {
+            font-size: 0.75rem;
+            color: #3e3e3c;
+            margin-bottom: 4px;
+        }
+
+        .sf-field label span.required {
+            color: #ea001e;
+        }
+
+        .sf-input {
+            border: 1px solid #dddbda;
+            border-radius: 4px;
+            padding: 0 12px;
+            height: 32px;
+            line-height: 32px;
+            font-size: 0.8125rem;
+            color: #080707;
+            transition: all 0.1s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .sf-input:focus {
+            outline: 0;
+            border-color: var(--sf-blue);
+            box-shadow: 0 0 3px #0176d3;
+        }
+        
+        textarea.sf-input {
+            height: auto;
+            line-height: 1.4;
+            padding: 8px 12px;
+            resize: vertical;
+        }
+
+        /* NEW: DISTINCT STYLING FOR THE PASTE EMAIL BOX */
+        #aiInputText {
+            background-color: #f0f8ff; /* AliceBlue background for distinction */
+            border: 2px dashed #8bbee8; /* Dashed border to indicate 'drop zone' */
+            font-family: 'Courier New', Courier, monospace; /* Monospace for 'raw text' feel */
+            color: #333;
+            font-size: 0.85rem;
+            min-height: 120px; /* Ensure it is tall */
+        }
+        
+        #aiInputText:focus {
+            background-color: #fff;
+            border-style: solid;
+            border-color: var(--sf-blue);
+        }
+        
+        #aiInputText::placeholder {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #747474;
+            opacity: 0.8;
+        }
+
+        select.sf-input {
+            background-color: #fff;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23706e6b' d='M3 6l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
+        .sf-output-field {
+            border-bottom: 1px solid #dddbda;
+            padding: 4px 0;
+            min-height: 20px;
+            font-size: 0.875rem;
+            color: #080707;
+        }
+
+        .sf-modal-footer {
+            padding: 0.75rem 1rem;
+            background-color: #f3f3f3;
+            border-top: 1px solid var(--sf-border);
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .sf-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 1rem;
+            height: 32px;
+            font-size: 0.8125rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        .sf-btn-neutral {
+            background: #fff;
+            border: 1px solid #dddbda;
+            color: #0176d3;
+        }
+        
+        .sf-btn-neutral:hover { background-color: #f3f3f3; }
+
+        .sf-btn-brand {
+            background: #0176d3;
+            border: 1px solid #0176d3;
+            color: #fff;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,0.16);
+        }
+        
+        .sf-btn-brand:hover { background-color: #005fb2; }
+        .sf-btn-brand:disabled { background-color: #c9c7c5; border-color: #c9c7c5; cursor: not-allowed; }
+
+        .icon-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            background-color: #f2cf5b;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .icon-box i { color: #fff; font-size: 1.2rem; }
+
+        /* --- LOADING SPINNER CSS --- */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        
+        .spinner-dark {
+            border: 2px solid rgba(1, 118, 211, 0.3);
+            border-top: 2px solid #0176d3;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- SUCCESS POPUP OVERLAY --- */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background: white;
+            width: 550px;
+            max-height: 95vh;
+            overflow-y: auto;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .popup-header {
+            background-color: #04844b;
+            color: white;
+            padding: 1rem;
+        }
+
+        .popup-header i { font-size: 2rem; }
+
+        .popup-body {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .popup-body h3 {
+            margin-top: 0;
+            color: #080707;
+            font-weight: 300;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .popup-data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid #f3f3f3;
+            padding-bottom: 0.25rem;
+        }
+        
+        .popup-label { color: #706e6b; font-size: 0.85rem; font-weight: 600; }
+        .popup-value { font-weight: 400; color: #080707; font-size: 0.9rem; text-align: right; max-width: 60%; }
+
+        .popup-footer {
+            background-color: #f3f3f3;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .popup-email-box {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .popup-email-box textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            margin-top: 8px;
+            border: 1px solid #dddbda;
+            background-color: #f9f9f9;
+            color: #333;
+            font-family: monospace;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        #popup-price {
+            color: #04844b;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* AI Section Styles */
+        .ai-input-container {
+            padding: 0 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .ai-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+        
+        .sparkle-icon {
+            color: #0176d3;
+            margin-right: 5px;
+        }
+
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="sf-modal">
+        <div class="sf-modal-header">
+            <div style="display: flex; align-items: center;">
+                <div class="icon-box"><i class="fas fa-suitcase"></i></div>
+                <h2 id="modal-title">New Case: Export Licensing</h2>
+            </div>
+            <div style="font-size: 1.2rem; color: #b0adab; cursor:pointer">&times;</div>
+            
+            <div id="progressContainer" class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <form id="salesforceForm">
+            <div class="sf-modal-content">
+                
+                <div class="sf-section-header">
+                    <span>AI Quick Import</span>
+                </div>
+                
+                <div class="ai-input-container">
+                    <div class="sf-field">
+                        <label>Paste Email Request Here</label>
+                        <textarea id="aiInputText" class="sf-input" rows="6" placeholder="Paste email content here (e.g. 'I need a quote for a Model X-500 going to Germany...')..."></textarea>
+                    </div>
+                    <div class="ai-toolbar">
+                        <button type="button" id="aiExtractBtn" class="sf-btn sf-btn-neutral">
+                            <i class="fas fa-magic sparkle-icon"></i> Auto-Fill Form
+                        </button>
+                    </div>
+                </div>
+
+
+                <div class="sf-section-header">Case Information</div>
+                
+                <div class="sf-form-grid">
+                    <div class="sf-field">
+                        <label>Contact Name <span class="required">*</span></label>
+                        <input type="text" class="sf-input" name="customerName" placeholder="Search Contacts..." required>
+                    </div>
+
+                    <div class="sf-field">
+                        <label>Company <span class="required">*</span></label>
+                        <input type="text" class="sf-input" name="company" placeholder="Search Company..." required>
+                    </div>
+
+                    <div class="sf-field">
+                        <label>Contact Email <span class="required">*</span></label>
+                        <input type="email" class="sf-input" name="email" placeholder="user@example.com" required>
+                    </div>
+
+                    <div class="sf-field">
+                        <label>Priority</label>
+                        <select class="sf-input">
+                            <option>Medium</option>
+                            <option>High</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sf-section-header">Product & Compliance Details</div>
+
+                <div class="sf-form-grid">
+                    <div class="sf-field">
+                        <label>Equipment Name <span class="required">*</span></label>
+                        <input type="text" class="sf-input" name="equipment" placeholder="" required>
+                    </div>
+
+                    <div class="sf-field">
+                        <label>Model Number <span class="required">*</span></label>
+                        <input type="text" class="sf-input" name="model" required>
+                    </div>
+
+                    <div class="sf-field">
+                        <label>Export Destination <span class="required">*</span></label>
+                        <select id="country" name="country" class="sf-input" required>
+                            <option value="">--None--</option>
+                            <option value="USA">United States</option>
+                            <option value="Germany">Germany</option>
+                            <option value="Japan">Japan</option>
+                            <option value="Vietnam">Vietnam</option>
+                            <option value="Singapore">Singapore</option>
+                        </select>
+                    </div>
+
+                    <div class="sf-field">
+                        <label>License Type</label>
+                        <select id="licenseType" name="licenseType" class="sf-input" required disabled>
+                            <option value="">--Select Country First--</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sf-section-header">Quotation System (Automated)</div>
+
+                <div class="sf-form-grid">
+                    <div class="sf-field">
+                        <label>Assigned Project Manager</label>
+                        <div id="res-pm" class="sf-output-field" style="background:#f3f3f3;">[System Generated]</div>
+                    </div>
+                    
+                    <div class="sf-field">
+                        <label>Calculated Cost</label>
+                        <div id="res-price" class="sf-output-field" style="background:#f3f3f3;">[System Generated]</div>
+                    </div>
+
+                    <div class="sf-field">
+                        <label>Official Quote (PDF)</label>
+                        <div class="sf-output-field">
+                            <a id="res-link" href="#" target="_blank" style="color:#0176d3; text-decoration:none; display:none;">Download Quote.pdf</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="sf-modal-footer">
+                <button type="button" class="sf-btn sf-btn-neutral">Cancel</button>
+                <button type="submit" id="submitBtn" class="sf-btn sf-btn-brand">Save</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="successPopup" class="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-header">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="popup-body">
+                <h3>Case Created Successfully!</h3>
+                
+                <div class="popup-data-row">
+                    <span class="popup-label">Contact Name:</span>
+                    <span class="popup-value" id="popup-name">--</span>
+                </div>
+                <div class="popup-data-row">
+                    <span class="popup-label">Equipment:</span>
+                    <span class="popup-value" id="popup-equipment">--</span>
+                </div>
+                <div class="popup-data-row">
+                    <span class="popup-label">Model:</span>
+                    <span class="popup-value" id="popup-model">--</span>
+                </div>
+                <div class="popup-data-row">
+                    <span class="popup-label">License Type:</span>
+                    <span class="popup-value" id="popup-license">--</span>
+                </div>
+                
+                <hr style="border:0; border-top:1px dashed #ddd; margin: 15px 0;">
+
+                <div class="popup-data-row">
+                    <span class="popup-label">Project Manager:</span>
+                    <span class="popup-value" id="popup-pm" style="color:#0176d3; font-weight:bold;">--</span>
+                </div>
+                <div class="popup-data-row">
+                    <span class="popup-label">Total Cost:</span>
+                    <span class="popup-value" id="popup-price">--</span>
+                </div>
+
+                <div class="popup-email-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="popup-label">Email Draft for Customer:</span>
+                        <a href="#" onclick="copyEmail()" style="font-size:0.8rem; color:#0176d3; text-decoration:none;">
+                            <i class="far fa-copy"></i> Copy
+                        </a>
+                    </div>
+                    <textarea id="popup-email-text" readonly>Loading email draft...</textarea>
+                </div>
+
+            </div>
+            <div class="popup-footer">
+                <button onclick="closePopup()" class="sf-btn sf-btn-neutral">Close</button>
+                <a id="popup-download-btn" href="#" target="_blank" class="sf-btn sf-btn-brand" style="text-decoration:none; display:none;">
+                    <i class="fas fa-file-pdf" style="margin-right:5px;"></i> Download Invoice PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const form = document.getElementById('salesforceForm');
+    const countrySelect = document.getElementById('country');
+    const licenseSelect = document.getElementById('licenseType');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // AI Section Elements
+    const aiExtractBtn = document.getElementById('aiExtractBtn');
+    const aiInputText = document.getElementById('aiInputText');
+    
+    // Elements for Progress & Popup
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    
+    const successPopup = document.getElementById('successPopup');
+    const popupName = document.getElementById('popup-name');
+    const popupEquipment = document.getElementById('popup-equipment');
+    const popupModel = document.getElementById('popup-model');
+    const popupLicense = document.getElementById('popup-license');
+    const popupPm = document.getElementById('popup-pm');
+    const popupPrice = document.getElementById('popup-price');
+    const popupDownloadBtn = document.getElementById('popup-download-btn');
+    const popupEmailText = document.getElementById('popup-email-text');
+
+    // !!! REPLACE THIS WITH YOUR WEBHOOK URL !!!
+    const N8N_EXTRACT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook/d3b44853-8592-4d2c-b912-cc3b710e846d';
+    const N8N_SUBMIT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook/bcceb884-2cf4-4c6d-921c-a1ce2e93a40d';
+
+    const licenseData = {
+        "USA": ["FCC Certification", "Safety Check"],
+        "Germany": ["CE Marking", "Safety Check"],
+        "Japan": ["VCCI", "Safety Check"],
+        "Vietnam": ["CR Mark", "Safety Check"],
+        "Singapore": ["Safety Mark", "IMDA Certification"]
+    };
+
+    let progressInterval = null;
+
+    countrySelect.addEventListener('change', updateLicenseDropdown);
+
+    function updateLicenseDropdown() {
+        const selectedCountry = countrySelect.value;
+        licenseSelect.innerHTML = '';
+        
+        if (selectedCountry && licenseData[selectedCountry]) {
+            licenseSelect.disabled = false;
+            
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.textContent = "--None--";
+            licenseSelect.appendChild(defaultOpt);
+
+            licenseData[selectedCountry].forEach(license => {
+                const option = document.createElement('option');
+                option.value = license;
+                option.textContent = license;
+                licenseSelect.appendChild(option);
+            });
+        } else {
+            licenseSelect.disabled = true;
+            licenseSelect.innerHTML = '<option value="">--Select Country First--</option>';
+        }
+    }
+
+    function closePopup() {
+        successPopup.style.display = 'none';
+        progressBar.style.width = '0%';
+        progressContainer.style.display = 'none';
+    }
+
+    function copyEmail() {
+        popupEmailText.select();
+        popupEmailText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(popupEmailText.value).then(() => {
+            alert("Email draft copied!");
+        });
+    }
+
+    function simulateProgress() {
+        progressContainer.style.display = 'block';
+        let width = 0;
+        progressBar.style.width = '0%';
+        
+        progressInterval = setInterval(() => {
+            if (width >= 90) {
+            } else {
+                width += Math.random() * 10;
+                if (width > 90) width = 90;
+                progressBar.style.width = width + '%';
+            }
+        }, 300);
+    }
+
+    function finishProgress() {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+    }
+
+    // --- NEW: AI Extraction Logic ---
+    aiExtractBtn.addEventListener('click', async () => {
+        const textToExtract = aiInputText.value.trim();
+        
+        if (!textToExtract) {
+            alert("Please paste text into the field first.");
+            return;
+        }
+
+        // UI Loading State
+        const originalBtnText = aiExtractBtn.innerHTML;
+        aiExtractBtn.innerHTML = '<div class="spinner spinner-dark"></div> Analyzing...';
+        aiExtractBtn.disabled = true;
+
+        try {
+            // Send payload with type: 'extract' so N8N If node can distinguish
+            const response = await fetch(N8N_EXTRACT_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'extract',
+                    text: textToExtract
+                })
+            });
+
+            const textResponse = await response.text();
+            if (!textResponse) throw new Error("Empty response from extraction server.");
+            
+            // --- PARSING FIX START ---
+            let data = JSON.parse(textResponse);
+            
+            // Handle array wrapper [ ... ]
+            if (Array.isArray(data) && data.length > 0) {
+                data = data[0];
+            }
+
+            // Handle "output" wrapper [ { output: [ ... ] } ]
+            if (data.output && Array.isArray(data.output) && data.output.length > 0) {
+                data = data.output[0];
+            }
+
+            // Handle "body" wrapper [ { output: [ { body: { ... } } ] } ]
+            const fields = data.body || data;
+            // --- PARSING FIX END ---
+
+            console.log("Extracted Data:", fields);
+
+            // Populate Fields (using optional chaining/defaults)
+            if (fields.contact_name) form.customerName.value = fields.contact_name;
+            if (fields.company) form.company.value = fields.company;
+            if (fields.email || fields.contact_email) form.email.value = fields.email || fields.contact_email;
+            if (fields.equipment_name) form.equipment.value = fields.equipment_name;
+            if (fields.model_number) form.model.value = fields.model_number;
+            
+            // Handle Country + License Dependency
+            const extractedCountry = fields.export_destination || fields.country;
+            if (extractedCountry) {
+                // Try to match the country string to our Select options
+                for (let i = 0; i < countrySelect.options.length; i++) {
+                    if (countrySelect.options[i].value.toLowerCase() === extractedCountry.toLowerCase()) {
+                        countrySelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                
+                // Trigger the update logic manually
+                updateLicenseDropdown();
+                
+                // Now set License if available
+                const extractedLicense = fields.license_type;
+                if (extractedLicense) {
+                    let matchFound = false;
+                    
+                    // Try to match exactly with available options
+                    for (let i = 0; i < licenseSelect.options.length; i++) {
+                        if (licenseSelect.options[i].value === extractedLicense) {
+                            licenseSelect.selectedIndex = i;
+                            matchFound = true;
+                            break;
+                        }
+                    }
+                    
+                    // Strict Validation: If no match, show error and do not fill
+                    if (!matchFound) {
+                         alert(`⚠️ AI Error: The license type "${extractedLicense}" is not valid for ${countrySelect.value}. Please select from the available options.`);
+                    }
+                }
+            }
+            
+            // Visual feedback
+            aiExtractBtn.innerHTML = '<i class="fas fa-check"></i> Filled!';
+            setTimeout(() => {
+                aiExtractBtn.innerHTML = originalBtnText;
+                aiExtractBtn.disabled = false;
+            }, 2000);
+
+        } catch (error) {
+            console.error('Extraction Error:', error);
+            alert('Could not extract data: ' + error.message);
+            aiExtractBtn.innerHTML = originalBtnText;
+            aiExtractBtn.disabled = false;
+        }
+    });
+
+
+    // --- Existing Submit Logic (Modified to include action type) ---
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        submitBtn.innerHTML = '<div class="spinner"></div> Processing...';
+        submitBtn.disabled = true;
+        simulateProgress();
+
+        const formData = {
+            action: 'submit', // Signal to N8N If node this is final submission
+            contact_name: form.customerName.value,
+            company: form.company.value,
+            contact_email: form.email.value,
+            equipment_name: form.equipment.value,
+            model_number: form.model.value,
+            export_destination: form.country.value,
+            license_type: form.licenseType.value,
+            timestamp: new Date().toISOString()
+        };
+
+        try {
+            const response = await fetch(N8N_SUBMIT_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            // Read as text first to handle empty responses from n8n
+            const textResponse = await response.text();
+            
+            if (!textResponse) {
+                throw new Error("Server returned empty response.");
+            }
+
+            let result;
+            try {
+                result = JSON.parse(textResponse);
+            } catch (jsonError) {
+                throw new Error("Server returned invalid JSON: " + textResponse);
+            }
+
+            if (!response.ok) throw new Error(`Server status: ${response.status}`);
+            
+            finishProgress();
+
+            if (Array.isArray(result) && result.length > 0) result = result[0];
+            if (result.body && typeof result.body === 'object') result = result.body;
+
+            const price = result['Base_Price'] || result['price'] || result['cost'] || 'Pending';
+            const currency = result['Currency'] || '';
+            const manager = result['PM_Name'] || result['manager'] || 'Assigned Manager';
+            const emailDraft = result['Email'] || "Email text not found in response."; 
+
+            let pdfUrl = null;
+            if (result.data && result.data.url) {
+                pdfUrl = result.data.url;
+            } else if (result.pdf_url) {
+                pdfUrl = result.pdf_url;
+            } else if (result.url) {
+                pdfUrl = result.url;
+            }
+
+            document.getElementById('res-pm').innerText = manager;
+            document.getElementById('res-price').innerText = price + " " + currency;
+            
+            const pdfLink = document.getElementById('res-link');
+            if (pdfUrl) {
+                pdfLink.href = pdfUrl;
+                pdfLink.style.display = 'inline';
+            }
+
+            popupName.innerText = formData.contact_name;
+            popupEquipment.innerText = formData.equipment_name;
+            popupModel.innerText = formData.model_number;
+            popupLicense.innerText = formData.license_type;
+            
+            popupPm.innerText = manager;
+            if (!isNaN(parseFloat(price))) {
+                popupPrice.innerText = price + " " + currency; 
+            } else {
+                popupPrice.innerText = price;
+            }
+
+            popupEmailText.value = emailDraft;
+
+            if (pdfUrl) {
+                popupDownloadBtn.href = pdfUrl;
+                popupDownloadBtn.style.display = 'inline-flex';
+            } else {
+                popupDownloadBtn.style.display = 'none';
+            }
+
+            setTimeout(() => {
+                successPopup.style.display = 'flex';
+                submitBtn.innerHTML = 'Save';
+                submitBtn.disabled = false;
+            }, 600);
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error sending data: ' + error.message);
+            
+            clearInterval(progressInterval);
+            progressBar.style.width = '0%';
+            progressContainer.style.display = 'none';
+            
+            submitBtn.innerHTML = 'Save';
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Salesforce Demo | Lead-to-Case Automation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- SALESFORCE LIGHTNING DESIGN SYSTEM (SLDS) --- */
+        :root {
+            --sf-brand: #0176d3;
+            --sf-bg: #b0c4df;
+            --sf-border: #dddbda;
+            --sf-text: #080707;
+            --sf-label: #3e3e3c;
+            --sf-header-bg: #f3f3f3;
+            --sf-link: #0176d3;
+            --sf-icon-pink: #f65366;
+            --sf-icon-purple: #7f8de1; 
+            --sf-input-border: #747474;
+            --sf-success-green: #04844b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--sf-bg);
+            background-image: url('https://www.salesforce.com/content/dam/web/en_us/www/images/home/bg-blue-texture.jpg');
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- 1. GLOBAL HEADER (Shared) --- */
+        .global-header {
+            background: #fff;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 1px solid var(--sf-border);
+            z-index: 20;
+            flex-shrink: 0;
+        }
+        .app-launcher { display: grid; grid-template-columns: repeat(3, 4px); gap: 2px; margin-right: 15px; cursor: pointer; }
+        .dot { width: 4px; height: 4px; background: #999; border-radius: 50%; }
+        .logo-text { font-size: 1.1rem; font-weight: bold; color: var(--sf-text); margin-right: 20px; display: flex; align-items: center; gap: 8px; }
+        .nav-link { margin: 0 10px; font-size: 0.85rem; color: var(--sf-text); font-weight: 400; cursor: pointer; border-bottom: 3px solid transparent; padding: 14px 0; }
+        .nav-link.active { border-bottom-color: var(--sf-brand); font-weight: 700; color: var(--sf-brand); }
+        .header-right { margin-left: auto; display: flex; gap: 20px; color: #706e6b; font-size: 1.1rem; align-items: center; }
+
+        /* --- 2. LIST VIEW (Initial Screen) --- */
+        #list-view-container {
+            flex: 1;
+            background: white;
+            margin: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--sf-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* New List Header Styles */
+        .lv-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--sf-border);
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .lv-icon {
+            width: 32px; height: 32px; background: var(--sf-icon-purple); border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; color: white; margin-right: 10px;
+        }
+        .lv-title-area { display: flex; align-items: center; }
+        .lv-breadcrumbs { font-size: 0.75rem; color: #444; margin-bottom: 2px; }
+        .lv-title { font-size: 1.125rem; font-weight: 700; color: #080707; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        
+        .lv-actions { display: flex; gap: 5px; align-items: center; }
+        .lv-btn-icon {
+            background: #fff; border: 1px solid #dddbda; color: #706e6b; width: 32px; height: 32px;
+            border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem;
+        }
+        .lv-btn-icon:hover { background: #f4f6f9; }
+        
+        /* Blue Filter Banner */
+        .filter-banner {
+            background: #032d60; /* Dark Blue */
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .metric-box {
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 5px 15px;
+            margin-right: 20px; display: flex; flex-direction: column;
+        }
+        .metric-label { font-size: 0.75rem; opacity: 0.8; }
+        .metric-val { font-size: 1.5rem; font-weight: 300; line-height: 1.1; }
+        .stats-row { display: flex; gap: 20px; font-size: 0.8125rem; align-items: center; }
+        .stat-item { display: flex; gap: 5px; }
+        .stat-item span { opacity: 0.7; }
+        .banner-filters { display: flex; gap: 10px; margin-left: auto; }
+        .banner-pill {
+            background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 15px;
+            padding: 2px 12px; font-size: 0.8125rem; display: flex; align-items: center; gap: 5px; cursor: pointer;
+        }
+
+        /* Controls under banner */
+        .list-controls {
+            padding: 8px 16px; background: #f3f3f3; border-bottom: 1px solid #dddbda;
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.8125rem;
+        }
+        .control-btns { display: flex; gap: 8px; }
+
+        /* Table */
+        .sf-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+        .sf-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid #dddbda; background: #fafaf9; color: #514f4d; font-weight: 700; font-size: 0.75rem; }
+        .sf-table td { padding: 8px 12px; border-bottom: 1px solid #dddbda; color: #080707; vertical-align: middle; }
+        .sf-table tr:hover { background-color: #f3f3f3; }
+        .row-action-btn {
+            width: 28px; height: 28px; border: 1px solid #dddbda; border-radius: 4px; background: white;
+            color: #706e6b; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 4px; font-size: 0.75rem;
+        }
+        .row-action-btn:hover { border-color: #0176d3; color: #0176d3; }
+
+        /* --- 3. CASE VIEW (The Assigning Screen) --- */
+        #case-view-container {
+            display: none; /* Hidden Initially */
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .record-header {
+            background: #f3f3f3;
+            padding: 15px 20px 0 20px;
+            border-bottom: 1px solid var(--sf-border);
+            flex-shrink: 0;
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .title-area { display: flex; gap: 12px; align-items: center; }
+        .icon-box { width: 32px; height: 32px; background: var(--sf-icon-pink); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem; }
+        .record-name { font-size: 1.125rem; font-weight: 700; color: var(--sf-text); margin: 2px 0 0 0; }
+        .breadcrumb { font-size: 0.8125rem; color: var(--sf-text); }
+        .header-actions { display: flex; gap: 8px; }
+        
+        .sf-btn {
+            background: #fff; border: 1px solid #dddbda; color: var(--sf-brand);
+            padding: 0 16px; height: 32px; border-radius: 4px; font-size: 0.8125rem; font-weight: 400; cursor: pointer;
+            display: inline-flex; align-items: center; text-decoration: none; justify-content: center;
+        }
+        .sf-btn:hover { background-color: #f4f6f9; }
+        .sf-btn-brand { background: var(--sf-brand); color: white; border: 1px solid var(--sf-brand); }
+        .sf-btn-brand:hover { background-color: #005fb2; }
+        .sf-btn-neutral { background: white; color: #0176d3; }
+
+        .highlights { display: flex; gap: 40px; margin-top: 15px; margin-left: 44px; padding-bottom: 15px; }
+        .hl-item p { margin: 0; font-size: 0.75rem; color: var(--sf-label); text-transform: uppercase; letter-spacing: 0.5px; }
+        .hl-item div { font-size: 0.875rem; color: var(--sf-text); margin-top: 4px; }
+
+        .workspace { display: flex; flex: 1; padding: 12px; gap: 12px; overflow: hidden; min-height: 0; }
+        .col-feed { flex: 65; background: white; border-radius: 4px; border: 1px solid var(--sf-border); display: flex; flex-direction: column; overflow: hidden; }
+        .tabs { display: flex; border-bottom: 1px solid var(--sf-border); padding-left: 0; flex-shrink: 0; }
+        .tab { padding: 12px 20px; font-size: 0.875rem; font-weight: 700; color: #444; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab.active { color: var(--sf-brand); border-bottom-color: var(--sf-brand); }
+        .feed-container { padding: 16px; background: #fff; flex: 1; overflow-y: auto; }
+        .publisher { background: #f3f3f3; border: 1px solid #dddbda; border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+        .pub-tabs { display: flex; background: #f3f3f3; border-bottom: 1px solid #dddbda; }
+        .pub-tab { padding: 10px 15px; font-size: 0.8125rem; color: #444; cursor: pointer; }
+        .pub-tab.active { background: #f3f3f3; color: #16325c; font-weight: 700; border-bottom: 3px solid transparent; }
+        .pub-input-area { padding: 15px; background: #f3f3f3; }
+        .fake-input { background: white; border: 1px solid #dddbda; border-radius: 4px; padding: 10px; color: #706e6b; font-size: 0.875rem; cursor: text; display: flex; justify-content: space-between; align-items: center; }
+        .share-btn { background: var(--sf-brand); color: white; border: none; padding: 6px 16px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+        .feed-filter { display: flex; justify-content: space-between; margin-bottom: 15px; margin-top: 20px; align-items: center; border-bottom: 1px solid #dddbda; padding-bottom: 10px; }
+        .filter-links { display: flex; gap: 20px; font-size: 0.8125rem; font-weight: 700; }
+        .filter-link { cursor: pointer; color: var(--sf-brand); }
+        .filter-link.active { color: #16325c; border-bottom: 2px solid #16325c; padding-bottom: 12px; margin-bottom: -12px; }
+        .feed-item { display: flex; gap: 12px; margin-bottom: 20px; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.9rem; flex-shrink: 0; }
+        .avatar.user { background: #65cae4; }
+        .avatar.bot { background: #4bca81; } 
+        .feed-content { flex: 1; }
+        .feed-header { font-size: 0.8125rem; margin-bottom: 4px; }
+        .feed-header a { color: var(--sf-link); text-decoration: none; font-weight: 600; }
+        .feed-info { font-size: 0.75rem; color: #706e6b; margin-top: 5px; }
+
+        /* RIGHT: DETAILS SIDEBAR */
+        .col-details { flex: 35; background: white; border-radius: 4px; border: 1px solid var(--sf-border); display: flex; flex-direction: column; overflow: hidden; position: relative; height: 100%; }
+        .sidebar-header { padding: 12px 16px; border-bottom: 3px solid var(--sf-brand); font-weight: 700; font-size: 1rem; color: #16325c; width: fit-content; margin-bottom: -1px; z-index: 5; flex-shrink: 0;}
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--sf-border); overflow-y: auto; flex: 1; padding-bottom: 20px; min-height: 0;}
+        .detail-item { padding: 8px 12px; border-bottom: 1px solid #f2f2f2; min-height: 48px; display: flex; flex-direction: column; position: relative; justify-content: center; }
+        .field-label { font-size: 0.75rem; color: var(--sf-label); margin-bottom: 2px; }
+        .field-value { font-size: 0.8125rem; color: var(--sf-text); min-height: 18px; display: flex; align-items: center; word-break: break-word; }
+        .field-value a { color: var(--sf-link); text-decoration: none; }
+        .edit-icon { position: absolute; right: 10px; top: 15px; color: #706e6b; font-size: 0.8rem; opacity: 1; cursor: pointer; background: white; padding: 2px; }
+        .sidebar-footer { padding: 15px; border-top: 1px solid #f2f2f2; flex-shrink: 0;}
+        .sidebar-footer a { display: block; color: var(--sf-link); text-decoration: none; font-size: 0.8125rem; margin-bottom: 5px; }
+
+        /* EDIT MODE STYLES */
+        #details-edit-mode { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+        .edit-form-container { flex: 1; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-height: 0; }
+        .edit-field { display: flex; flex-direction: column; margin-bottom: 4px; }
+        .edit-label { font-size: 0.75rem; color: var(--sf-label); margin-bottom: 4px; font-weight: 400;}
+        .edit-label span { color: #ea001e; }
+        .sf-input-box { width: 100%; border: 1px solid #dddbda; border-radius: 4px; padding: 0 12px; height: 32px; font-size: 0.8125rem; color: #080707; box-sizing: border-box; outline: none; transition: border 0.1s; }
+        .sf-input-box:focus { border-color: var(--sf-brand); box-shadow: 0 0 3px var(--sf-brand); }
+        select.sf-input-box { background-color: #fff; appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23706e6b' d='M3 6l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+        .sf-textarea { width: 100%; border: 1px solid #dddbda; border-radius: 4px; padding: 8px 12px; font-size: 0.8125rem; color: #080707; box-sizing: border-box; outline: none; resize: vertical; min-height: 60px; }
+        .search-wrapper { position: relative; }
+        .search-wrapper i { position: absolute; right: 10px; top: 8px; color: #706e6b; font-size: 0.8rem; pointer-events: none; }
+        .edit-footer-bar { flex-shrink: 0; background: rgba(255,255,255,0.95); border-top: 1px solid #dddbda; padding: 10px 16px; display: flex; justify-content: center; gap: 10px; z-index: 10; }
+
+        /* --- MODALS & OVERLAYS --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding-top: 50px; }
+        .sf-modal { background: white; width: 640px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; position: relative; max-height: 85vh; }
+        /* Larger Modal for New Contact */
+        .sf-modal.large { width: 900px; max-width: 95vw; }
+        
+        .modal-header { padding: 1rem; display: flex; justify-content: center; align-items: center; position: relative; border-radius: 4px 4px 0 0; background-color: #fff; border-bottom: none; box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16); z-index: 10;}
+        .modal-header h2 { font-size: 1.5rem; font-weight: 300; margin: 0; color: #080707; }
+        .modal-close { position: absolute; right: 5px; top: 5px; padding: 1rem; cursor: pointer; color: #706e6b; }
+        
+        .modal-body { padding: 20px 30px; overflow-y: auto; }
+        .search-container { margin-bottom: 20px; }
+        .search-label { font-size: 0.75rem; color: #3e3e3c; margin-bottom: 5px; }
+        .required { color: #ea001e; margin-right: 2px; }
+        .search-box { border: 1px solid #dddbda; border-radius: 4px; display: flex; align-items: center; padding: 0 10px; height: 32px; }
+        .user-icon { background: #65cae4; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; margin-right: 8px; }
+        .search-box input { border: none; outline: none; width: 100%; font-size: 0.875rem; }
+        
+        .modal-footer { padding: 12px 16px; background: #f3f3f3; border-top: 1px solid var(--sf-border); display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 4px 4px; }
+
+        /* Form Grid for New Contact */
+        .form-section-header { background: #f3f3f3; padding: 8px 12px; font-size: 1rem; font-weight: 400; margin-bottom: 15px; margin-top: 15px; border-radius: 4px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
+        .form-group label { font-size: 0.75rem; color: #3e3e3c; margin-bottom: 4px; }
+        .form-group label span { color: #ea001e; }
+        .salutation-group { display: flex; gap: 10px; }
+        
+        /* --- TOAST NOTIFICATION --- */
+        #toast-notification {
+            position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+            background: #04844b; color: white; padding: 0.75rem 1.5rem;
+            border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 2000; display: none; align-items: center; gap: 10px;
+            min-width: 400px;
+        }
+        #toast-notification i { font-size: 1.2rem; }
+        .toast-content { display: flex; flex-direction: column; }
+        .toast-title { font-weight: 700; font-size: 0.9rem; }
+        .toast-sub { font-size: 0.8rem; opacity: 0.9; }
+
+        /* Loading */
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 999; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .spinner-circle { width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #0176d3; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="global-header">
+        <div class="app-launcher"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="logo-text"><i class="fab fa-salesforce fa-2x" style="color:#0176d3;"></i> Service</div>
+        <div class="nav-link">Home</div><div class="nav-link">Chatter</div><div class="nav-link">Accounts</div><div class="nav-link active">Contacts</div><div class="nav-link" id="nav-cases">Cases</div><div class="nav-link">Reports</div><div class="nav-link">Dashboards</div>
+        <div class="header-right">
+            <i class="fas fa-search"></i><i class="fas fa-plus-circle"></i><i class="fas fa-bell"></i>
+            <div style="width:24px; height:24px; background:#65cae4; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:white; font-size:0.7rem;"><i class="fas fa-user"></i></div>
+        </div>
+    </div>
+
+    <div id="list-view-container">
+        <div class="lv-header">
+            <div class="lv-title-area">
+                <div class="lv-icon"><i class="fas fa-user-friends"></i></div>
+                <div>
+                    <div class="lv-breadcrumbs">Contacts</div>
+                    <div class="lv-title">My Contacts <i class="fas fa-caret-down" style="font-size:0.8rem; color:#444;"></i></div>
+                </div>
+            </div>
+            <div class="lv-actions">
+                <div class="lv-btn-icon"><i class="fas fa-cog"></i></div>
+                <div class="lv-btn-icon"><i class="fas fa-sync-alt"></i></div>
+                <div class="lv-btn-icon"><i class="fas fa-pencil-alt"></i></div>
+                <button class="sf-btn" onclick="openNewContactModal()">New</button>
+                <button class="sf-btn" style="padding:0 10px;">List View</button>
+            </div>
+        </div>
+
+        <div class="filter-banner">
+            <div style="display:flex; align-items:center;">
+                <div class="metric-box">
+                    <span class="metric-label">Total Contacts</span>
+                    <span class="metric-val" id="metric-total-contacts">5</span>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-item"><span style="font-weight:700;">5</span> <span>No Activity</span> <i class="fas fa-info-circle"></i></div>
+                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>Idle</span> <i class="fas fa-info-circle"></i></div>
+                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>No Upcoming</span> <i class="fas fa-info-circle"></i></div>
+                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>Overdue</span></div>
+                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>Due Today</span></div>
+                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>Upcoming</span> <i class="fas fa-info-circle"></i></div>
+                </div>
+            </div>
+            <div class="banner-filters">
+                <div class="banner-pill">Created <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i> This Quarter <i class="fas fa-times" style="font-size:0.7rem;"></i></div>
+                <div class="banner-pill">Owner <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i> Me <i class="fas fa-search" style="font-size:0.7rem;"></i></div>
+                <div style="width:24px; height:24px; border:1px solid rgba(255,255,255,0.3); border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-bookmark" style="font-size:0.8rem;"></i></div>
+                <div style="width:24px; height:24px; border:1px solid rgba(255,255,255,0.3); border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-filter" style="font-size:0.8rem;"></i></div>
+            </div>
+        </div>
+
+        <div class="list-controls">
+            <div style="color:#3e3e3c;" id="list-info-text">5 items • Filtered by Created Date, Me, Total Contacts</div>
+            <div class="control-btns">
+                <button class="sf-btn">Send Email</button>
+                <button class="sf-btn">Assign Label</button>
+            </div>
+        </div>
+
+        <div style="overflow:auto; background:white; flex:1;">
+            <table class="sf-table">
+                <thead>
+                    <tr>
+                        <th style="width:30px;"><input type="checkbox"></th>
+                        <th>Name <i class="fas fa-chevron-down" style="margin-left:5px; font-size:0.7rem;"></i></th>
+                        <th style="width:30px;"><i class="fas fa-bookmark" style="color:#706e6b;"></i></th>
+                        <th>Title <i class="fas fa-chevron-down" style="margin-left:5px; font-size:0.7rem;"></i></th>
+                        <th>Account Name <i class="fas fa-chevron-down" style="margin-left:5px; font-size:0.7rem;"></i></th>
+                        <th>Last Activity <i class="fas fa-chevron-down" style="margin-left:5px; font-size:0.7rem;"></i></th>
+                        <th style="width:100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contact-table-body">
+                    <tr>
+                        <td><input type="checkbox"></td>
+                        <td><a href="#" style="color:#0176d3; text-decoration:none;">James Hanson</a></td>
+                        <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
+                        <td></td><td></td><td></td>
+                        <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox"></td>
+                        <td><a href="#" style="color:#0176d3; text-decoration:none;">Christien Smith</a></td>
+                        <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
+                        <td></td><td></td><td></td>
+                        <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox"></td>
+                        <td><a href="#" style="color:#0176d3; text-decoration:none;">Mary Adams</a></td>
+                        <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
+                        <td></td><td></td><td></td>
+                        <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox"></td>
+                        <td><a href="#" style="color:#0176d3; text-decoration:none;">Peter Larson</a></td>
+                        <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
+                        <td></td><td></td><td></td>
+                        <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox"></td>
+                        <td><a href="#" style="color:#0176d3; text-decoration:none;">Renee Lewis</a></td>
+                        <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
+                        <td></td><td></td><td></td>
+                        <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="case-view-container">
+        <div class="record-header">
+            <div class="header-top">
+                <div class="title-area">
+                    <div class="icon-box"><i class="fas fa-briefcase"></i></div>
+                    <div><div class="breadcrumb">Case</div><h1 class="record-name" id="header-case-id">--</h1></div>
+                </div>
+                <div class="header-actions">
+                    <button class="sf-btn"><i class="fas fa-plus" style="margin-right:5px"></i> Follow</button><button class="sf-btn">Edit</button><button class="sf-btn">Delete</button>
+                    <button class="sf-btn" onclick="openOwnerModal()" style="border-right: 1px solid #dddbda;">Change Owner</button>
+                    <button class="sf-btn" style="border-left:none; padding:0 8px;"><i class="fas fa-caret-down"></i></button>
+                </div>
+            </div>
+            <div class="highlights">
+                <div class="hl-item"><p>Priority</p><div id="hl-priority">Medium</div></div>
+                <div class="hl-item"><p>Status</p><div id="hl-status">New</div></div>
+                <div class="hl-item"><p>Case Number</p><div id="hl-case-id">--</div></div>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="col-feed">
+                <div class="tabs"><div class="tab active">Feed</div><div class="tab">Related</div></div>
+                <div class="feed-container" id="feed-list">
+                    <div class="publisher">
+                        <div class="pub-tabs"><div class="pub-tab active">Post</div><div class="pub-tab">Poll</div></div>
+                        <div class="pub-input-area"><div class="fake-input">Share an update...<button class="share-btn">Share</button></div></div>
+                    </div>
+                    <div class="feed-filter" id="feed-anchor">
+                        <div class="filter-links"><span class="filter-link active">All Updates</span><span class="filter-link">Call Logs</span><span class="filter-link">Text Posts</span><span class="filter-link">Status Changes</span></div>
+                        <div>
+                            <div style="border:1px solid #dddbda; border-radius:4px; padding:4px 8px; display:inline-flex; align-items:center;">
+                                <i class="fas fa-search" style="color:#706e6b; margin-right:5px;"></i><input type="text" placeholder="Search this feed..." style="border:none; outline:none; font-size:0.8rem;">
+                            </div>
+                            <i class="fas fa-filter" style="color:#706e6b; margin-left:10px;"></i><i class="fas fa-sync" style="color:#706e6b; margin-left:10px;"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="feed-item">
+                        <div class="avatar user"><i class="fas fa-user"></i></div>
+                        <div class="feed-content">
+                            <div class="feed-header"><i class="fas fa-chevron-right" style="font-size:0.7rem; color:#706e6b; margin-right:5px;"></i><a href="#">Matthew McCullough</a> <span style="font-size:0.7rem; background:#c23934; color:white; padding:1px 4px; border-radius:2px; margin-left:4px;"><i class="fas fa-briefcase"></i> Case created</span></div>
+                            <div style="margin-left:15px; margin-top:5px; font-size:0.8125rem;">
+                                <div style="color:#706e6b;">Subject:</div><div style="color:#706e6b;">Priority: <span style="color:#080707;">Medium</span></div><div style="color:#706e6b;">Status: <span style="color:#080707;">New</span></div><div style="color:#706e6b;">Case Number: <span style="color:#080707;" id="feed-case-id">--</span></div>
+                            </div>
+                            <div class="feed-info" style="margin-left:15px;" id="feed-timestamp">Just now &bull; <a href="#" style="text-decoration:none; color:#706e6b;">Comment</a></div>
+                        </div>
+                    </div>
+                    
+                    </div>
+            </div>
+
+            <div class="col-details">
+                <div class="sidebar-header">Details</div>
+                
+                <div id="details-view-mode" class="details-grid">
+                    <div class="detail-item" id="owner-row" style="transition: background 1s;">
+                        <span class="field-label">Case Owner</span>
+                        <span id="detail-owner" class="field-value">
+                            <img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px;">
+                            <a href="#">Matthew McCullough</a>
+                            <i class="fas fa-user-friends" style="color:#0176d3; margin-left: auto; font-size: 0.8rem; cursor: pointer;" onclick="openOwnerModal()" title="Change Owner"></i>
+                        </span>
+                        <i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i>
+                    </div>
+                    <div class="detail-item">
+                        <span class="field-label">Status</span><span id="view-status" class="field-value">New</span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i>
+                    </div>
+                    <div class="detail-item"><span class="field-label">Case Number</span><span class="field-value" id="detail-case-id">--</span></div>
+                    <div class="detail-item">
+                        <span class="field-label">Priority</span><span id="view-priority" class="field-value">Medium</span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i>
+                    </div>
+                    <div class="detail-item"><span class="field-label">Contact Name</span><span id="view-contact" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Contact Phone</span><span id="view-cphone" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Account Name</span><span id="view-account" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Contact Email</span><span id="view-cemail" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Type</span><span id="view-type" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Case Origin</span><span id="view-origin" class="field-value">Phone</span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Case Reason</span><span id="view-reason" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"></div>
+                    <div class="detail-item"><span class="field-label">Web Email</span><span id="view-web-email" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Web Company</span><span id="view-web-company" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Web Name</span><span id="view-web-name" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Web Phone</span><span id="view-web-phone" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Date/Time Opened</span><span class="field-value" id="detail-opened-date">--</span></div>
+                    <div class="detail-item"><span class="field-label">Date/Time Closed</span><span id="view-closed" class="field-value"></span></div>
+                    <div class="detail-item"><span class="field-label">Product</span><span id="view-product" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Engineering Req Number</span><span id="view-eng-req" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">Potential Liability</span><span id="view-liability" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item"><span class="field-label">SLA Violation</span><span id="view-sla" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    
+                    <div class="detail-item" style="grid-column: span 1;"><span class="field-label">Created By</span><span class="field-value" id="detail-created-by">--</span></div>
+                    <div class="detail-item" style="grid-column: span 1;"><span class="field-label">Last Modified By</span><span class="field-value" id="detail-modified-by">--</span></div>
+
+                    <div class="detail-item" style="grid-column: span 2;"><span class="field-label">Subject</span><span id="view-subject" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item" style="grid-column: span 2;"><span class="field-label">Description</span><span id="view-description" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+                    <div class="detail-item" style="grid-column: span 2; border-bottom: none;"><span class="field-label">Internal Comments</span><span id="view-comments" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
+
+                    <div class="sidebar-footer"><a href="#">Up-sell / Cross-sell Opportunity</a></div>
+                </div>
+
+                <div id="details-edit-mode">
+                    <div style="font-size:0.75rem; text-align:right; color:#3e3e3c; padding: 10px 16px 0 0;"><span>*</span> = Required Information</div>
+                    <div class="edit-form-container">
+                        <div class="edit-field"><label class="edit-label">Case Owner</label>
+                            <div id="edit-owner-display" class="field-value" style="padding-left:0"><img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px;"> Matthew McCullough</div>
+                        </div>
+                        <div class="edit-field">
+                            <label class="edit-label"><span>*</span> Status</label>
+                            <select id="edit-status" class="sf-input-box">
+                                <option value="New">New</option>
+                                <option value="Working">Working</option>
+                                <option value="Escalated">Escalated</option>
+                                <option value="Closed">Closed</option>
+                            </select>
+                        </div>
+
+                        <div class="edit-field"><label class="edit-label">Case Number</label><div class="field-value" style="padding-left:0" id="edit-case-id-display">--</div></div>
+                        <div class="edit-field">
+                            <label class="edit-label">Priority</label>
+                            <select id="edit-priority" class="sf-input-box">
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+
+                        <div class="edit-field">
+                            <label class="edit-label">Contact Name</label>
+                            <div class="search-wrapper"><input id="edit-contact" type="text" class="sf-input-box" placeholder="Search Contacts..."><i class="fas fa-search"></i></div>
+                        </div>
+                        <div class="edit-field"><label class="edit-label">Contact Phone</label><input id="edit-cphone" type="text" class="sf-input-box"></div>
+
+                        <div class="edit-field">
+                            <label class="edit-label">Account Name</label>
+                            <div class="search-wrapper"><input id="edit-account" type="text" class="sf-input-box" placeholder="Search Accounts..."><i class="fas fa-search"></i></div>
+                        </div>
+                        <div class="edit-field"><label class="edit-label">Contact Email</label><input id="edit-cemail" type="text" class="sf-input-box"></div>
+
+                        <div class="edit-field">
+                            <label class="edit-label">Type</label>
+                            <select id="edit-type" class="sf-input-box"><option>--None--</option></select>
+                        </div>
+                        <div class="edit-field">
+                            <label class="edit-label"><span>*</span> Case Origin</label>
+                            <select id="edit-origin" class="sf-input-box"><option>Phone</option><option>Web</option><option>Email</option></select>
+                        </div>
+
+                         <div class="edit-field">
+                            <label class="edit-label">Case Reason</label>
+                            <select id="edit-reason" class="sf-input-box"><option>--None--</option></select>
+                        </div>
+                        <div class="edit-field"></div>
+
+                        <div class="edit-field"><label class="edit-label">Web Email</label><input id="edit-web-email" type="text" class="sf-input-box"></div>
+                        <div class="edit-field"><label class="edit-label">Web Company</label><input id="edit-web-company" type="text" class="sf-input-box"></div>
+
+                        <div class="edit-field"><label class="edit-label">Web Name</label><input id="edit-web-name" type="text" class="sf-input-box"></div>
+                        <div class="edit-field"><label class="edit-label">Web Phone</label><input id="edit-web-phone" type="text" class="sf-input-box"></div>
+                        
+                        <div class="edit-field"><label class="edit-label">Date/Time Opened</label><div class="field-value" style="padding-left:0" id="edit-opened-date">--</div></div>
+                        <div class="edit-field"><label class="edit-label">Date/Time Closed</label><input id="edit-closed" type="text" class="sf-input-box"></div>
+
+                        <div class="edit-field">
+                            <label class="edit-label">Product</label>
+                            <select id="edit-product" class="sf-input-box"><option>--None--</option></select>
+                        </div>
+                        <div class="edit-field"><label class="edit-label">Engineering Req Number</label><input id="edit-eng-req" type="text" class="sf-input-box"></div>
+
+                        <div class="edit-field">
+                            <label class="edit-label">Potential Liability</label>
+                            <select id="edit-liability" class="sf-input-box"><option>--None--</option></select>
+                        </div>
+                        <div class="edit-field">
+                            <label class="edit-label">SLA Violation</label>
+                            <select id="edit-sla" class="sf-input-box"><option>--None--</option></select>
+                        </div>
+
+                        <div class="edit-field"><label class="edit-label">Created By</label><div class="field-value" style="padding-left:0" id="edit-created-by">--</div></div>
+                        <div class="edit-field"><label class="edit-label">Last Modified By</label><div class="field-value" style="padding-left:0" id="edit-modified-by">--</div></div>
+
+                        <div class="edit-field" style="grid-column: span 2;">
+                            <label class="edit-label">Subject</label>
+                            <input id="edit-subject" type="text" class="sf-input-box">
+                        </div>
+                        <div class="edit-field" style="grid-column: span 2;">
+                            <label class="edit-label">Description</label>
+                            <textarea id="edit-description" class="sf-textarea"></textarea>
+                        </div>
+                        <div class="edit-field" style="grid-column: span 2;">
+                            <label class="edit-label">Internal Comments</label>
+                            <textarea id="edit-comments" class="sf-textarea"></textarea>
+                        </div>
+
+                        <div style="grid-column: span 2; margin-top: 10px; margin-bottom: 20px;">
+                            <a href="#" style="color:#0176d3; text-decoration:none; font-size:0.8125rem;">Up-sell / Cross-sell Opportunity</a>
+                        </div>
+                    </div>
+
+                    <div class="edit-footer-bar">
+                        <button class="sf-btn sf-btn-neutral" onclick="cancelEditMode()">Cancel</button>
+                        <button class="sf-btn sf-btn-brand" onclick="saveEditMode()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ownerModal" class="modal-overlay">
+        <div class="sf-modal">
+            <div class="modal-header">
+                <h2>Change Case Owner</h2><div class="modal-close" onclick="closeOwnerModal()"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="search-container">
+                    <div class="search-label"><span class="required">*</span> Select New Owner</div>
+                    <div class="search-box"><div class="user-icon"><i class="fas fa-user"></i></div><input id="new-owner-input" type="text" placeholder="Search Users..."><i class="fas fa-search" style="color:#706e6b;"></i></div>
+                </div>
+                <div style="display:flex; align-items:center; margin-bottom:20px;">
+                    <input type="checkbox" id="notify" style="margin-right:8px;"><label for="notify" style="font-size:0.8125rem; color:#080707;">Send notification email</label>
+                </div>
+                <div style="font-size:0.8125rem; color:#080707;">The new owner will also become the owner of these records related to <strong id="modal-case-id">--</strong> that are owned by <strong>you</strong>. <ul style="margin-top:8px; padding-left:20px; list-style-type:disc; color:#080707;"><li>Notes and attachments</li><li>Open activities</li></ul></div>
+            </div>
+            <div class="modal-footer"><button class="sf-btn" onclick="closeOwnerModal()">Cancel</button><button class="sf-btn sf-btn-brand" onclick="runChangeOwner()">Change Owner</button></div>
+        </div>
+    </div>
+
+    <div id="newContactModal" class="modal-overlay">
+        <div class="sf-modal large">
+            <div class="modal-header">
+                <h2>New Contact</h2><div class="modal-close" onclick="closeNewContactModal()"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body" style="background:#fff;">
+                
+                <div style="display:flex; justify-content:flex-end; font-size:0.75rem; color:#3e3e3c; margin-bottom:5px;">
+                    <span style="color:#ea001e; margin-right:2px;">*</span> = Required Information
+                </div>
+
+                <div class="form-section-header">Contact Information</div>
+                
+                <div style="display:flex; gap:30px;">
+                    <div style="flex:1;">
+                        <div class="form-group">
+                            <label>Contact Owner</label>
+                            <div style="font-size:0.875rem; color:#080707; display:flex; align-items:center; margin-top:4px;">
+                                 <div style="width:24px; height:24px; background:#65cae4; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:white; font-size:0.7rem; margin-right:8px;"><i class="fas fa-user"></i></div>
+                                 Matthew McCullough
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top:20px;">
+                            <label style="margin-bottom:0px;"><span style="color:#ea001e">*</span> Name</label>
+                        </div>
+                        <div style="border-left: 1px solid transparent; padding-left:0px; margin-bottom:15px;">
+                            <div class="form-group">
+                                <label style="font-weight:400; color:#3e3e3c;">Salutation</label>
+                                <select class="sf-input-box"><option>--None--</option><option>Mr.</option><option>Ms.</option><option>Mrs.</option><option>Dr.</option><option>Prof.</option></select>
+                            </div>
+                             <div class="form-group">
+                                <label style="font-weight:400; color:#3e3e3c;">First Name</label>
+                                <input id="new-contact-first" type="text" class="sf-input-box" placeholder="First Name">
+                            </div>
+                             <div class="form-group">
+                                <label style="font-weight:400; color:#3e3e3c;"><span style="color:#ea001e">*</span> Last Name</label>
+                                <input id="new-contact-last" type="text" class="sf-input-box" placeholder="Last Name">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Account Name</label>
+                            <div class="search-wrapper"><input type="text" class="sf-input-box" placeholder="Search Accounts..."><i class="fas fa-search"></i></div>
+                        </div>
+                         <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" class="sf-input-box">
+                        </div>
+                         <div class="form-group">
+                            <label>Department</label>
+                            <input type="text" class="sf-input-box">
+                        </div>
+                        <div class="form-group">
+                            <label>Birthdate</label>
+                            <div class="search-wrapper"><input type="text" class="sf-input-box"><i class="fas fa-calendar" style="right:10px;"></i></div>
+                        </div>
+                         <div class="form-group">
+                            <label>Reports To</label>
+                             <div class="search-wrapper"><input type="text" class="sf-input-box" placeholder="Search Contacts..."><i class="fas fa-search"></i></div>
+                        </div>
+                    </div>
+                    
+                    <div style="flex:1;">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" class="sf-input-box">
+                        </div>
+                        <div class="form-group">
+                            <label>Home Phone</label>
+                            <input type="text" class="sf-input-box">
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile</label>
+                            <input type="text" class="sf-input-box">
+                        </div>
+                        <div class="form-group">
+                            <label>Other Phone</label>
+                            <input type="text" class="sf-input-box">
+                        </div>
+                        <div class="form-group">
+                            <label>Fax</label>
+                            <input type="text" class="sf-input-box">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input id="new-contact-email" type="text" class="sf-input-box">
+                        </div>
+                        <div class="form-group">
+                            <label>Assistant</label>
+                            <input type="text" class="sf-input-box">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="sf-btn sf-btn-neutral" onclick="closeNewContactModal()">Cancel</button>
+                <button class="sf-btn sf-btn-neutral">Save & New</button>
+                <button class="sf-btn sf-btn-brand" onclick="saveNewContact()">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="newCaseModal" class="modal-overlay">
+        <div class="sf-modal large">
+            <div class="modal-header">
+                <h2>New Case</h2><div class="modal-close" onclick="closeNewCaseModal()"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body" style="background:#fff;">
+                <div style="display:flex; justify-content:flex-end; font-size:0.75rem; color:#3e3e3c; margin-bottom:5px;">
+                    <span style="color:#ea001e; margin-right:2px;">*</span> = Required Information
+                </div>
+
+                <div class="form-section-header">Case Information</div>
+                <div class="form-row">
+                    <div style="flex:1">
+                        <div class="form-group">
+                            <label>Case Owner</label>
+                            <div style="font-size:0.875rem; color:#080707; display:flex; align-items:center; margin-top:4px;">
+                                 <div style="width:24px; height:24px; background:#65cae4; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:white; font-size:0.7rem; margin-right:8px;"><i class="fas fa-user"></i></div>
+                                 Matthew McCullough
+                            </div>
+                        </div>
+                         <div class="form-group">
+                             <label style="color:#3e3e3c;">Case Number</label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Contact Name</label>
+                            <div class="search-wrapper"><input id="new-case-contact" type="text" class="sf-input-box" placeholder="Search Contacts..."><i class="fas fa-search"></i></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Account Name</label>
+                            <div class="search-wrapper"><input id="new-case-account" type="text" class="sf-input-box" placeholder="Search Accounts..."><i class="fas fa-search"></i></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="new-case-type" class="sf-input-box"><option>--None--</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Case Reason</label>
+                            <select id="new-case-reason" class="sf-input-box"><option>--None--</option></select>
+                        </div>
+                    </div>
+                    
+                    <div style="flex:1">
+                        <div class="form-group">
+                            <label><span style="color:#ea001e">*</span> Status</label>
+                            <select id="new-case-status" class="sf-input-box"><option>New</option><option>Working</option><option>Escalated</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="new-case-priority" class="sf-input-box"><option>Medium</option><option>High</option><option>Low</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label><span style="color:#ea001e">*</span> Case Origin</label>
+                            <select id="new-case-origin" class="sf-input-box"><option>--None--</option><option>Phone</option><option>Web</option><option>Email</option></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section-header">Web Information</div>
+                <div class="form-row">
+                     <div style="flex:1">
+                        <div class="form-group"><label>Web Email</label><input class="sf-input-box"></div>
+                        <div class="form-group"><label>Web Name</label><input class="sf-input-box"></div>
+                     </div>
+                     <div style="flex:1">
+                        <div class="form-group"><label>Web Company</label><input class="sf-input-box"></div>
+                        <div class="form-group"><label>Web Phone</label><input class="sf-input-box"></div>
+                     </div>
+                </div>
+
+                <div class="form-section-header">Additional Information</div>
+                <div class="form-row">
+                     <div style="flex:1">
+                        <div class="form-group"><label>Product</label><select class="sf-input-box"><option>--None--</option></select></div>
+                        <div class="form-group"><label>Potential Liability</label><select class="sf-input-box"><option>--None--</option></select></div>
+                     </div>
+                     <div style="flex:1">
+                        <div class="form-group"><label>Engineering Req Number</label><input class="sf-input-box"></div>
+                        <div class="form-group"><label>SLA Violation</label><select class="sf-input-box"><option>--None--</option></select></div>
+                     </div>
+                </div>
+
+                <div class="form-section-header">Description Information</div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input id="new-case-subject" class="sf-input-box" value="Request for License">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="new-case-description" class="sf-textarea"></textarea>
+                </div>
+                 <div class="form-group">
+                    <label>Internal Comments</label>
+                    <textarea class="sf-textarea"></textarea>
+                </div>
+
+            </div>
+            <div class="modal-footer" style="justify-content: space-between; align-items: center;">
+                 <div style="display:flex; align-items:center;">
+                    <input type="checkbox" id="notify-contact" style="margin-right:8px;">
+                    <label for="notify-contact" style="font-size:0.8125rem; color:#080707;">Send notification email to contact</label>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="sf-btn sf-btn-neutral" onclick="closeNewCaseModal()">Cancel</button>
+                    <button class="sf-btn sf-btn-neutral">Save & New</button>
+                    <button class="sf-btn sf-btn-brand" onclick="saveNewCase()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-notification">
+        <div style="background:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:#04844b;"><i class="fas fa-check" style="font-size:0.8rem;"></i></div>
+        <div class="toast-content">
+            <span class="toast-title" id="toast-message">Contact created.</span>
+        </div>
+        <i class="fas fa-times" style="margin-left:auto; cursor:pointer; font-size:1rem; opacity:0.6;" onclick="hideToast()"></i>
+    </div>
+
+    <div id="loading-overlay"><div class="spinner-circle"></div><div style="font-weight: bold; color: #0176d3; margin-top:10px;">Automating Assignment...</div></div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const PANTRY_ID = 'c64d05d8-dc6b-42a6-9f46-7b78d8732d35'; 
+        const PANTRY_URL = `https://getpantry.cloud/apiv1/pantry/${PANTRY_ID}/basket/salesforce`;
+        
+        // ** DEMO CONFIG **
+        const DEMO_DELAY = 4000; 
+
+        // State
+        let previousDataString = "";
+        let flowStarted = false; 
+        let isCaseViewActive = false; // Flag to gate owner updates
+        let currentOwnerState = "Matthew McCullough"; // Internal tracker to prevent duplicates
+        
+        // Temp Storage for Flow
+        let tempContactName = "";
+        let tempContactEmail = "";
+        let tempLicenseType = "";
+        let tempCaseId = "";
+        let tempCaseTime = "";
+
+        // Modal Logic
+        function openOwnerModal() { document.getElementById('ownerModal').style.display = 'flex'; }
+        function closeOwnerModal() { document.getElementById('ownerModal').style.display = 'none'; }
+        
+        // --- 1. NEW CONTACT FLOW ---
+        function openNewContactModal(name, email, license) {
+            document.getElementById('newContactModal').style.display = 'flex';
+            
+            const nameParts = name ? name.split(' ') : ['',''];
+            document.getElementById('new-contact-first').value = nameParts[0] || '';
+            document.getElementById('new-contact-last').value = nameParts.slice(1).join(' ') || '';
+            document.getElementById('new-contact-email').value = email || '';
+            
+            tempContactName = name;
+            tempContactEmail = email;
+            tempLicenseType = license || "Request for License";
+            
+            setTimeout(() => {
+                saveNewContact();
+            }, DEMO_DELAY);
+        }
+        function closeNewContactModal() { document.getElementById('newContactModal').style.display = 'none'; }
+
+        function saveNewContact() {
+            closeNewContactModal();
+            
+            // --- NEW: Add row to the Contacts table ---
+            const tableBody = document.getElementById('contact-table-body');
+            const newRow = tableBody.insertRow(0); // Insert at top
+            newRow.style.animation = "fadeIn 0.5s ease-in-out"; 
+            newRow.innerHTML = `
+                <td><input type="checkbox"></td>
+                <td><a href="#" style="color:#0176d3; text-decoration:none;">${tempContactName}</a></td>
+                <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
+                <td></td><td></td><td>Just now</td>
+                <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
+            `;
+
+            // --- NEW: Update Contact Count (Banner) ---
+            const countEl = document.getElementById('metric-total-contacts');
+            if(countEl) {
+                countEl.innerText = parseInt(countEl.innerText) + 1;
+            }
+
+            // --- NEW: Update List Info Count (Below Banner) ---
+            const listInfo = document.getElementById('list-info-text');
+            if(listInfo) {
+                const currentVal = parseInt(listInfo.innerText);
+                // Replace first occurrence of number (e.g., "5" -> "6")
+                listInfo.innerText = listInfo.innerText.replace(currentVal, currentVal + 1);
+            }
+            // ------------------------------------------
+
+            showToast(`Contact "${tempContactName}" was created.`);
+            
+            setTimeout(() => {
+                openNewCaseModal();
+            }, DEMO_DELAY); 
+        }
+
+        // --- 2. NEW CASE FLOW ---
+        function openNewCaseModal() {
+            document.getElementById('newCaseModal').style.display = 'flex';
+            document.getElementById('new-case-contact').value = tempContactName;
+            
+            // MODIFIED: Ensure description explicitly includes the License Type label
+            const descriptionVal = tempLicenseType ? `License Type: ${tempLicenseType}` : "License Type: Not Specified";
+            document.getElementById('new-case-description').value = descriptionVal;
+            
+            setTimeout(() => {
+               saveNewCase(); 
+            }, DEMO_DELAY);
+        }
+        function closeNewCaseModal() { document.getElementById('newCaseModal').style.display = 'none'; }
+
+        function saveNewCase() {
+             closeNewCaseModal();
+             transitionToCaseView();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast-notification');
+            document.getElementById('toast-message').innerText = message;
+            toast.style.display = 'flex';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+        function hideToast() { document.getElementById('toast-notification').style.display = 'none'; }
+
+        function transitionToCaseView() {
+            // GENERATE RANDOM CASE NUMBER (8 digits, starting with 0000)
+            const randomDigits = Math.floor(1000 + Math.random() * 9000);
+            tempCaseId = `0000${randomDigits}`;
+
+            document.getElementById('list-view-container').style.display = 'none';
+            document.getElementById('case-view-container').style.display = 'flex';
+            document.getElementById('nav-cases').classList.add('active');
+
+            // Set dynamic time
+            const now = new Date();
+            tempCaseTime = now.toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+            
+            // UI CONSISTENCY FOR CASE ID
+            document.getElementById('header-case-id').innerText = tempCaseId;
+            document.getElementById('hl-case-id').innerText = tempCaseId;
+            document.getElementById('feed-case-id').innerText = tempCaseId;
+            document.getElementById('detail-case-id').innerText = tempCaseId;
+            document.getElementById('edit-case-id-display').innerText = tempCaseId;
+            document.getElementById('modal-case-id').innerText = tempCaseId;
+
+            // POPULATE DATA
+            document.getElementById('view-contact').innerHTML = `<a href="#">${tempContactName}</a>`;
+            document.getElementById('view-cemail').innerHTML = `<a href="#">${tempContactEmail}</a>`;
+            document.getElementById('view-subject').innerText = "Request for License";
+            
+            // MODIFIED: Read from the modal input so the Description matches exactly what was shown
+            document.getElementById('view-description').innerText = document.getElementById('new-case-description').value;
+            
+            document.getElementById('detail-opened-date').innerText = tempCaseTime;
+            
+            const userImg = '<img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px;">';
+            document.getElementById('detail-created-by').innerHTML = `${userImg} Matthew McCullough, ${tempCaseTime}`;
+            document.getElementById('detail-modified-by').innerHTML = `${userImg} Matthew McCullough, ${tempCaseTime}`;
+            
+            // --- ENABLE OWNER UPDATES & RESET UI ---
+            isCaseViewActive = true;
+            currentOwnerState = "Matthew McCullough"; 
+
+            const ownerHTML = `${userImg} <a href="#">Matthew McCullough</a> <i class="fas fa-user-friends" style="color:#0176d3; margin-left: auto; font-size: 0.8rem; cursor: pointer;" onclick="openOwnerModal()" title="Change Owner"></i>`;
+            document.getElementById('detail-owner').innerHTML = ownerHTML;
+            document.getElementById('edit-owner-display').innerHTML = `${userImg} Matthew McCullough`;
+
+            showToast(`Case "${tempCaseId}" was created.`);
+        }
+
+        function runChangeOwner(newOwnerName) {
+            // --- 3-Second Delay before applying changes ---
+            setTimeout(() => {
+                document.getElementById('hl-status').innerText = 'Working';
+                document.getElementById('view-status').innerText = 'Working';
+                
+                const ownerField = document.getElementById('detail-owner');
+                ownerField.innerHTML = `
+                    <img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px;">
+                    <a href="#">${newOwnerName}</a>
+                    <i class="fas fa-user-friends" style="color:#0176d3; margin-left: auto; font-size: 0.8rem; cursor: pointer;" onclick="openOwnerModal()" title="Change Owner"></i>
+                `;
+
+                const feedAnchor = document.getElementById('feed-anchor');
+                const newFeedItemHTML = `
+                <div class="feed-item" style="animation: fadeIn 0.5s ease-in-out;">
+                    <div class="avatar bot"><i class="fas fa-robot"></i></div>
+                    <div class="feed-content">
+                        <div class="feed-header"><i class="fas fa-chevron-right" style="font-size:0.7rem; color:#706e6b; margin-right:5px;"></i><a href="#">System Automation</a> <span style="font-size:0.7rem; background:#04844b; color:white; padding:1px 4px; border-radius:2px; margin-left:4px;">Record Updated</span></div>
+                        <div style="margin-left:15px; margin-top:5px; background:#f4fbf7; padding:10px; border:1px solid #c1eac5; border-radius:4px;">
+                            <div style="font-size:0.8125rem;">Changed <strong>Case Owner</strong> to <a href="#">${newOwnerName}</a></div>
+                            <div style="font-size:0.8125rem;">Changed <strong>Status</strong> to <strong>Working</strong></div>
+                        </div>
+                        <div class="feed-info" style="margin-left:15px;">Just now</div>
+                    </div>
+                </div>`;
+                feedAnchor.insertAdjacentHTML('afterend', newFeedItemHTML);
+
+                const row = document.getElementById('owner-row');
+                row.style.backgroundColor = "#fff9c4";
+                setTimeout(() => { row.style.backgroundColor = "white"; }, 2000);
+            }, 3000); 
+        }
+
+        // Get Pantry is down, so we'll use a local simulation instead
+        // setInterval(() => {
+        //     fetch(PANTRY_URL + '?_t=' + new Date().getTime())
+        //         .then(response => { if(response.ok) return response.json(); return {}; })
+        //         .then(data => {
+        //             // 1. Contact Flow Trigger (Run Once)
+        //             if (data && data.contact_name && !flowStarted) {
+        //                 flowStarted = true;
+        //                 openNewContactModal(data.contact_name, data.contact_email, data.license_type);
+        //             }
+
+        //             // 2. Owner Update Trigger (Gated by Case View & Change Detection)
+        //             // Only run if case view is active AND the data owner differs from our internal tracker
+        //             if (isCaseViewActive && data.owner && data.owner !== currentOwnerState) {
+        //                 currentOwnerState = data.owner; // Lock tracker immediately to prevent double-fire
+        //                 runChangeOwner(data.owner);
+        //             }
+        //         }).catch(err => {});
+        // }, 1000); 
+
+        // --- REPLACEMENT CODE: LOCAL SIMULATION (No API needed) ---
+        
+        // 1. Trigger the "New Contact" flow automatically after 2 seconds
+        setTimeout(() => {
+            if (!flowStarted) {
+                console.log("Simulating Incoming Webhook: New Contact");
+                flowStarted = true;
+                // You can change these values to whatever you want for the demo
+                openNewContactModal("John Doe", "john.doe@blueocean.com", "Terminator Insurance");
+            }
+        }, 2000);
+
+        // 2. Monitor for Case View, then trigger "Owner Change" flow
+        const simulationCheck = setInterval(() => {
+            // Only trigger if we are in Case View AND the owner hasn't changed yet
+            if (isCaseViewActive && currentOwnerState === "Matthew McCullough") {
+                
+                // Stop checking so we don't trigger it twice
+                clearInterval(simulationCheck); 
+                
+                console.log("Case View active. Queuing Owner Change...");
+                
+                // Wait 5 seconds after screen load to make it look realistic
+                setTimeout(() => {
+                    console.log("Simulating Incoming Webhook: Owner Change");
+                    // Lock the state tracker
+                    currentOwnerState = "Sarah Jenkins"; 
+                    // Run the update
+                    runChangeOwner("Sarah Jenkins");
+                }, 5000); 
+            }
+        }, 1000);
+
+        // --- OPTIONAL: MANUAL TRIGGERS ---
+        // Type these in the browser console (F12) if you want to control the exact timing:
+        // window.triggerContact = () => openNewContactModal("John Doe", "john@example.com", "Manual License");
+        // window.triggerOwner = () => runChangeOwner("Jane Doe");
+
+        const fields = ['status', 'priority', 'contact', 'cphone', 'account', 'cemail', 'type', 'origin', 'reason', 'web-email', 'web-company', 'web-name', 'web-phone', 'closed', 'product', 'eng-req', 'liability', 'sla', 'subject', 'description', 'comments'];
+        function enableEditMode() { fields.forEach(f => { const v = document.getElementById('view-' + f); const e = document.getElementById('edit-' + f); if(v && e) e.value = v.innerText; }); document.getElementById('details-view-mode').style.display = 'none'; document.getElementById('details-edit-mode').style.display = 'flex'; }
+        function cancelEditMode() { document.getElementById('details-edit-mode').style.display = 'none'; document.getElementById('details-view-mode').style.display = 'grid'; }
+        function saveEditMode() { fields.forEach(f => { const v = document.getElementById('view-' + f); const e = document.getElementById('edit-' + f); if(v && e) v.innerText = e.value; }); document.getElementById('hl-status').innerText = document.getElementById('edit-status').value; cancelEditMode(); }
+    </script>
+</body>
+</html>
