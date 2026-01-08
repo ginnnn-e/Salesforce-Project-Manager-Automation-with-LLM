@@ -621,8 +621,11 @@
     // !!! REPLACE THIS WITH YOUR WEBHOOK URL !!!
     const N8N_EXTRACT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook/d3b44853-8592-4d2c-b912-cc3b710e846d';
     const N8N_SUBMIT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook/bcceb884-2cf4-4c6d-921c-a1ce2e93a40d';
+    // NEW: Webhook to fetch dropdown data on load
+    const N8N_INIT_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook/d3b44853-8592-4d2c-b912-cc3b710e846d';
 
-    const licenseData = {
+    // CHANGED: Made this a let so it can be overwritten by webhook data
+    let licenseData = {
         "USA": ["FCC Certification", "Safety Check"],
         "Germany": ["CE Marking", "Safety Check"],
         "Japan": ["VCCI", "Safety Check"],
@@ -637,10 +640,68 @@
     // --- INITIALIZATION ---
     // Add the first product row by default
     addProductRow();
+    
+    // FETCH INIT DATA ON LOAD
+    window.addEventListener('DOMContentLoaded', fetchInitData);
+
+    async function fetchInitData() {
+        try {
+            console.log("Fetching init data...");
+            const response = await fetch(N8N_INIT_WEBHOOK_URL);
+            if (!response.ok) throw new Error("Init webhook failed");
+            
+            const rawData = await response.json();
+            // Handle array or wrapped response
+            let dataList = Array.isArray(rawData) ? rawData : (rawData.body || rawData.data || []);
+            
+            if (dataList.length > 0) {
+                const newLicenseData = {};
+                
+                dataList.forEach(item => {
+                    const country = item.Country;
+                    const license = item.License_Type;
+                    
+                    if (country && license) {
+                        if (!newLicenseData[country]) {
+                            newLicenseData[country] = [];
+                        }
+                        if (!newLicenseData[country].includes(license)) {
+                            newLicenseData[country].push(license);
+                        }
+                    }
+                });
+                
+                // Update the global data
+                licenseData = newLicenseData;
+                console.log("Updated license data:", licenseData);
+                
+                // Refresh existing dropdowns in the DOM
+                document.querySelectorAll('.country-select').forEach(select => {
+                    const currentVal = select.value;
+                    select.innerHTML = getCountryOptionsHTML(currentVal);
+                });
+            }
+        } catch (err) {
+            console.warn("Could not load initial data from webhook, using defaults.", err);
+        }
+    }
 
     addRowBtn.addEventListener('click', () => {
         addProductRow();
     });
+
+    // Helper to generate options HTML string
+    function getCountryOptionsHTML(selectedValue = "") {
+        let options = '<option value="">--None--</option>';
+        const countries = Object.keys(licenseData).sort();
+        
+        countries.forEach(country => {
+            const isSelected = (country === selectedValue) ? 'selected' : '';
+            options += `<option value="${country}" ${isSelected}>${country}</option>`;
+        });
+        
+        return options;
+    }
 
     function addProductRow(data = {}) {
         const index = document.querySelectorAll('.product-row').length + 1;
@@ -665,14 +726,7 @@
                 <div class="sf-field">
                     <label>Export Destination <span class="required">*</span></label>
                     <select class="sf-input country-select" required>
-                        <option value="">--None--</option>
-                        <option value="USA">United States</option>
-                        <option value="Germany">Germany</option>
-                        <option value="Japan">Japan</option>
-                        <option value="Vietnam">Vietnam</option>
-                        <option value="Singapore">Singapore</option>
-                        <option value="Australia">Australia</option>
-                        <option value="Indonesia">Indonesia</option>
+                        ${getCountryOptionsHTML(data.country)}
                     </select>
                 </div>
 
@@ -917,6 +971,7 @@
 
         const contactName = form.customerName.value;
         const contactEmail = form.email.value;
+        const companyName = form.company.value; // ADDED: Get company name
         
         const payload = [];
         const productRows = document.querySelectorAll('.product-row');
@@ -928,6 +983,7 @@
             payload.push({
                 contact_name: contactName,
                 contact_email: contactEmail,
+                company: companyName, // ADDED: Include company in payload
                 country: country,
                 license_type: lic
             });

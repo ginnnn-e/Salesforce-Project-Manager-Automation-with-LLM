@@ -15,7 +15,8 @@
             --sf-header-bg: #f3f3f3;
             --sf-link: #0176d3;
             --sf-icon-pink: #f65366;
-            --sf-icon-purple: #7f8de1; 
+            --sf-icon-purple: #7f8de1;
+            --sf-icon-orange: #f4b400; 
             --sf-input-border: #747474;
             --sf-success-green: #04844b;
         }
@@ -52,7 +53,7 @@
         .header-right { margin-left: auto; display: flex; gap: 20px; color: #706e6b; font-size: 1.1rem; align-items: center; }
 
         /* --- 2. LIST VIEW (Initial Screen) --- */
-        #list-view-container {
+        #list-view-container, #case-list-container {
             flex: 1;
             background: white;
             margin: 10px;
@@ -62,6 +63,8 @@
             flex-direction: column;
             overflow: hidden;
         }
+
+        #case-list-container { display: none; } /* Hidden initially */
         
         /* New List Header Styles */
         .lv-header {
@@ -76,6 +79,8 @@
             width: 32px; height: 32px; background: var(--sf-icon-purple); border-radius: 4px;
             display: flex; align-items: center; justify-content: center; color: white; margin-right: 10px;
         }
+        .lv-icon.case-icon { background: var(--sf-icon-orange); }
+
         .lv-title-area { display: flex; align-items: center; }
         .lv-breadcrumbs { font-size: 0.75rem; color: #444; margin-bottom: 2px; }
         .lv-title { font-size: 1.125rem; font-weight: 700; color: #080707; display: flex; align-items: center; gap: 5px; cursor: pointer; }
@@ -130,7 +135,7 @@
         }
         .row-action-btn:hover { border-color: #0176d3; color: #0176d3; }
 
-        /* --- 3. CASE VIEW (The Assigning Screen) --- */
+        /* --- 3. CASE VIEW (The Assigning Screen - Kept for reference but mainly using List View now) --- */
         #case-view-container {
             display: none; /* Hidden Initially */
             flex: 1;
@@ -265,6 +270,35 @@
         .spinner-circle { width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #0176d3; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* --- FLOATING ACTION BUTTON (FAB) --- */
+        .demo-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #2e844a; /* Distinct Green */
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+            font-size: 1rem;
+            gap: 10px;
+        }
+        .demo-fab:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+            background: #256a3c;
+        }
+        .demo-fab i {
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
@@ -272,7 +306,9 @@
     <div class="global-header">
         <div class="app-launcher"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
         <div class="logo-text"><i class="fab fa-salesforce fa-2x" style="color:#0176d3;"></i> Service</div>
-        <div class="nav-link">Home</div><div class="nav-link">Chatter</div><div class="nav-link">Accounts</div><div class="nav-link active">Contacts</div><div class="nav-link" id="nav-cases">Cases</div><div class="nav-link">Reports</div><div class="nav-link">Dashboards</div>
+        <div class="nav-link active" id="nav-contacts">Contacts</div>
+        <div class="nav-link" id="nav-cases">Cases</div>
+        <div class="nav-link">Reports</div><div class="nav-link">Dashboards</div>
         <div class="header-right">
             <i class="fas fa-search"></i><i class="fas fa-plus-circle"></i><i class="fas fa-bell"></i>
             <div style="width:24px; height:24px; background:#65cae4; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:white; font-size:0.7rem;"><i class="fas fa-user"></i></div>
@@ -289,11 +325,11 @@
                 </div>
             </div>
             <div class="lv-actions">
+                <!-- Removed Button from here -->
                 <div class="lv-btn-icon"><i class="fas fa-cog"></i></div>
                 <div class="lv-btn-icon"><i class="fas fa-sync-alt"></i></div>
                 <div class="lv-btn-icon"><i class="fas fa-pencil-alt"></i></div>
                 <button class="sf-btn" onclick="openNewContactModal()">New</button>
-                <button class="sf-btn" style="padding:0 10px;">List View</button>
             </div>
         </div>
 
@@ -301,30 +337,22 @@
             <div style="display:flex; align-items:center;">
                 <div class="metric-box">
                     <span class="metric-label">Total Contacts</span>
-                    <span class="metric-val" id="metric-total-contacts">5</span>
+                    <span class="metric-val" id="metric-total-contacts">2</span>
                 </div>
                 <div class="stats-row">
-                    <div class="stat-item"><span style="font-weight:700;">5</span> <span>No Activity</span> <i class="fas fa-info-circle"></i></div>
-                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>Idle</span> <i class="fas fa-info-circle"></i></div>
-                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>No Upcoming</span> <i class="fas fa-info-circle"></i></div>
-                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>Overdue</span></div>
-                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>Due Today</span></div>
-                    <div class="stat-item"><span style="font-weight:700;">0</span> <span>Upcoming</span> <i class="fas fa-info-circle"></i></div>
+                    <div class="stat-item"><span style="font-weight:700;">2</span> <span>No Activity</span></div>
                 </div>
             </div>
             <div class="banner-filters">
-                <div class="banner-pill">Created <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i> This Quarter <i class="fas fa-times" style="font-size:0.7rem;"></i></div>
-                <div class="banner-pill">Owner <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i> Me <i class="fas fa-search" style="font-size:0.7rem;"></i></div>
-                <div style="width:24px; height:24px; border:1px solid rgba(255,255,255,0.3); border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-bookmark" style="font-size:0.8rem;"></i></div>
-                <div style="width:24px; height:24px; border:1px solid rgba(255,255,255,0.3); border-radius:4px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-filter" style="font-size:0.8rem;"></i></div>
+                <div class="banner-pill">Created <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i> This Quarter</div>
+                <div class="banner-pill">Owner <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i> Me</div>
             </div>
         </div>
 
         <div class="list-controls">
-            <div style="color:#3e3e3c;" id="list-info-text">5 items • Filtered by Created Date, Me, Total Contacts</div>
+            <div style="color:#3e3e3c;" id="list-info-text">2 items • Filtered by Created Date, Me</div>
             <div class="control-btns">
                 <button class="sf-btn">Send Email</button>
-                <button class="sf-btn">Assign Label</button>
             </div>
         </div>
 
@@ -356,31 +384,65 @@
                         <td></td><td></td><td></td>
                         <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
                     </tr>
-                    <tr>
-                        <td><input type="checkbox"></td>
-                        <td><a href="#" style="color:#0176d3; text-decoration:none;">Mary Adams</a></td>
-                        <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
-                        <td></td><td></td><td></td>
-                        <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox"></td>
-                        <td><a href="#" style="color:#0176d3; text-decoration:none;">Peter Larson</a></td>
-                        <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
-                        <td></td><td></td><td></td>
-                        <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox"></td>
-                        <td><a href="#" style="color:#0176d3; text-decoration:none;">Renee Lewis</a></td>
-                        <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
-                        <td></td><td></td><td></td>
-                        <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
-                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+    <div id="case-list-container">
+        <div class="lv-header">
+            <div class="lv-title-area">
+                <div class="lv-icon case-icon"><i class="fas fa-briefcase"></i></div>
+                <div>
+                    <div class="lv-breadcrumbs">Cases</div>
+                    <div class="lv-title">All Cases <i class="fas fa-caret-down" style="font-size:0.8rem; color:#444;"></i></div>
+                </div>
+            </div>
+            <div class="lv-actions">
+                <div class="lv-btn-icon"><i class="fas fa-cog"></i></div>
+                <div class="lv-btn-icon"><i class="fas fa-sync-alt"></i></div>
+            </div>
+        </div>
+
+        <div class="filter-banner">
+            <div style="display:flex; align-items:center;">
+                <div class="metric-box">
+                    <span class="metric-label">Total Cases</span>
+                    <span class="metric-val" id="metric-total-cases">0</span>
+                </div>
+            </div>
+             <div class="banner-filters">
+                <div class="banner-pill">Status <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i> All</div>
+            </div>
+        </div>
+
+        <div class="list-controls">
+            <div style="color:#3e3e3c;" id="case-list-info-text">0 items</div>
+            <div class="control-btns">
+                <button class="sf-btn">Change Owner</button>
+            </div>
+        </div>
+
+        <div style="overflow:auto; background:white; flex:1;">
+            <table class="sf-table">
+                <thead>
+                    <tr>
+                        <th style="width:30px;"><input type="checkbox"></th>
+                        <th>Case Number</th>
+                        <th>Subject</th>
+                        <th>Contact Name</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Case Owner</th>
+                        <th style="width:100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="case-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
 
     <div id="case-view-container">
         <div class="record-header">
@@ -390,203 +452,13 @@
                     <div><div class="breadcrumb">Case</div><h1 class="record-name" id="header-case-id">--</h1></div>
                 </div>
                 <div class="header-actions">
-                    <button class="sf-btn"><i class="fas fa-plus" style="margin-right:5px"></i> Follow</button><button class="sf-btn">Edit</button><button class="sf-btn">Delete</button>
+                    <button class="sf-btn">Edit</button>
                     <button class="sf-btn" onclick="openOwnerModal()" style="border-right: 1px solid #dddbda;">Change Owner</button>
-                    <button class="sf-btn" style="border-left:none; padding:0 8px;"><i class="fas fa-caret-down"></i></button>
                 </div>
-            </div>
-            <div class="highlights">
-                <div class="hl-item"><p>Priority</p><div id="hl-priority">Medium</div></div>
-                <div class="hl-item"><p>Status</p><div id="hl-status">New</div></div>
-                <div class="hl-item"><p>Case Number</p><div id="hl-case-id">--</div></div>
             </div>
         </div>
-
         <div class="workspace">
-            <div class="col-feed">
-                <div class="tabs"><div class="tab active">Feed</div><div class="tab">Related</div></div>
-                <div class="feed-container" id="feed-list">
-                    <div class="publisher">
-                        <div class="pub-tabs"><div class="pub-tab active">Post</div><div class="pub-tab">Poll</div></div>
-                        <div class="pub-input-area"><div class="fake-input">Share an update...<button class="share-btn">Share</button></div></div>
-                    </div>
-                    <div class="feed-filter" id="feed-anchor">
-                        <div class="filter-links"><span class="filter-link active">All Updates</span><span class="filter-link">Call Logs</span><span class="filter-link">Text Posts</span><span class="filter-link">Status Changes</span></div>
-                        <div>
-                            <div style="border:1px solid #dddbda; border-radius:4px; padding:4px 8px; display:inline-flex; align-items:center;">
-                                <i class="fas fa-search" style="color:#706e6b; margin-right:5px;"></i><input type="text" placeholder="Search this feed..." style="border:none; outline:none; font-size:0.8rem;">
-                            </div>
-                            <i class="fas fa-filter" style="color:#706e6b; margin-left:10px;"></i><i class="fas fa-sync" style="color:#706e6b; margin-left:10px;"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="feed-item">
-                        <div class="avatar user"><i class="fas fa-user"></i></div>
-                        <div class="feed-content">
-                            <div class="feed-header"><i class="fas fa-chevron-right" style="font-size:0.7rem; color:#706e6b; margin-right:5px;"></i><a href="#">Matthew McCullough</a> <span style="font-size:0.7rem; background:#c23934; color:white; padding:1px 4px; border-radius:2px; margin-left:4px;"><i class="fas fa-briefcase"></i> Case created</span></div>
-                            <div style="margin-left:15px; margin-top:5px; font-size:0.8125rem;">
-                                <div style="color:#706e6b;">Subject:</div><div style="color:#706e6b;">Priority: <span style="color:#080707;">Medium</span></div><div style="color:#706e6b;">Status: <span style="color:#080707;">New</span></div><div style="color:#706e6b;">Case Number: <span style="color:#080707;" id="feed-case-id">--</span></div>
-                            </div>
-                            <div class="feed-info" style="margin-left:15px;" id="feed-timestamp">Just now &bull; <a href="#" style="text-decoration:none; color:#706e6b;">Comment</a></div>
-                        </div>
-                    </div>
-                    
-                    </div>
-            </div>
-
-            <div class="col-details">
-                <div class="sidebar-header">Details</div>
-                
-                <div id="details-view-mode" class="details-grid">
-                    <div class="detail-item" id="owner-row" style="transition: background 1s;">
-                        <span class="field-label">Case Owner</span>
-                        <span id="detail-owner" class="field-value">
-                            <img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px;">
-                            <a href="#">Matthew McCullough</a>
-                            <i class="fas fa-user-friends" style="color:#0176d3; margin-left: auto; font-size: 0.8rem; cursor: pointer;" onclick="openOwnerModal()" title="Change Owner"></i>
-                        </span>
-                        <i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i>
-                    </div>
-                    <div class="detail-item">
-                        <span class="field-label">Status</span><span id="view-status" class="field-value">New</span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i>
-                    </div>
-                    <div class="detail-item"><span class="field-label">Case Number</span><span class="field-value" id="detail-case-id">--</span></div>
-                    <div class="detail-item">
-                        <span class="field-label">Priority</span><span id="view-priority" class="field-value">Medium</span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i>
-                    </div>
-                    <div class="detail-item"><span class="field-label">Contact Name</span><span id="view-contact" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Contact Phone</span><span id="view-cphone" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Account Name</span><span id="view-account" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Contact Email</span><span id="view-cemail" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Type</span><span id="view-type" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Case Origin</span><span id="view-origin" class="field-value">Phone</span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Case Reason</span><span id="view-reason" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"></div>
-                    <div class="detail-item"><span class="field-label">Web Email</span><span id="view-web-email" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Web Company</span><span id="view-web-company" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Web Name</span><span id="view-web-name" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Web Phone</span><span id="view-web-phone" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Date/Time Opened</span><span class="field-value" id="detail-opened-date">--</span></div>
-                    <div class="detail-item"><span class="field-label">Date/Time Closed</span><span id="view-closed" class="field-value"></span></div>
-                    <div class="detail-item"><span class="field-label">Product</span><span id="view-product" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Engineering Req Number</span><span id="view-eng-req" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">Potential Liability</span><span id="view-liability" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item"><span class="field-label">SLA Violation</span><span id="view-sla" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    
-                    <div class="detail-item" style="grid-column: span 1;"><span class="field-label">Created By</span><span class="field-value" id="detail-created-by">--</span></div>
-                    <div class="detail-item" style="grid-column: span 1;"><span class="field-label">Last Modified By</span><span class="field-value" id="detail-modified-by">--</span></div>
-
-                    <div class="detail-item" style="grid-column: span 2;"><span class="field-label">Subject</span><span id="view-subject" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item" style="grid-column: span 2;"><span class="field-label">Description</span><span id="view-description" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-                    <div class="detail-item" style="grid-column: span 2; border-bottom: none;"><span class="field-label">Internal Comments</span><span id="view-comments" class="field-value"></span><i class="fas fa-pencil-alt edit-icon" onclick="enableEditMode()"></i></div>
-
-                    <div class="sidebar-footer"><a href="#">Up-sell / Cross-sell Opportunity</a></div>
-                </div>
-
-                <div id="details-edit-mode">
-                    <div style="font-size:0.75rem; text-align:right; color:#3e3e3c; padding: 10px 16px 0 0;"><span>*</span> = Required Information</div>
-                    <div class="edit-form-container">
-                        <div class="edit-field"><label class="edit-label">Case Owner</label>
-                            <div id="edit-owner-display" class="field-value" style="padding-left:0"><img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px;"> Matthew McCullough</div>
-                        </div>
-                        <div class="edit-field">
-                            <label class="edit-label"><span>*</span> Status</label>
-                            <select id="edit-status" class="sf-input-box">
-                                <option value="New">New</option>
-                                <option value="Working">Working</option>
-                                <option value="Escalated">Escalated</option>
-                                <option value="Closed">Closed</option>
-                            </select>
-                        </div>
-
-                        <div class="edit-field"><label class="edit-label">Case Number</label><div class="field-value" style="padding-left:0" id="edit-case-id-display">--</div></div>
-                        <div class="edit-field">
-                            <label class="edit-label">Priority</label>
-                            <select id="edit-priority" class="sf-input-box">
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
-                                <option value="Low">Low</option>
-                            </select>
-                        </div>
-
-                        <div class="edit-field">
-                            <label class="edit-label">Contact Name</label>
-                            <div class="search-wrapper"><input id="edit-contact" type="text" class="sf-input-box" placeholder="Search Contacts..."><i class="fas fa-search"></i></div>
-                        </div>
-                        <div class="edit-field"><label class="edit-label">Contact Phone</label><input id="edit-cphone" type="text" class="sf-input-box"></div>
-
-                        <div class="edit-field">
-                            <label class="edit-label">Account Name</label>
-                            <div class="search-wrapper"><input id="edit-account" type="text" class="sf-input-box" placeholder="Search Accounts..."><i class="fas fa-search"></i></div>
-                        </div>
-                        <div class="edit-field"><label class="edit-label">Contact Email</label><input id="edit-cemail" type="text" class="sf-input-box"></div>
-
-                        <div class="edit-field">
-                            <label class="edit-label">Type</label>
-                            <select id="edit-type" class="sf-input-box"><option>--None--</option></select>
-                        </div>
-                        <div class="edit-field">
-                            <label class="edit-label"><span>*</span> Case Origin</label>
-                            <select id="edit-origin" class="sf-input-box"><option>Phone</option><option>Web</option><option>Email</option></select>
-                        </div>
-
-                         <div class="edit-field">
-                            <label class="edit-label">Case Reason</label>
-                            <select id="edit-reason" class="sf-input-box"><option>--None--</option></select>
-                        </div>
-                        <div class="edit-field"></div>
-
-                        <div class="edit-field"><label class="edit-label">Web Email</label><input id="edit-web-email" type="text" class="sf-input-box"></div>
-                        <div class="edit-field"><label class="edit-label">Web Company</label><input id="edit-web-company" type="text" class="sf-input-box"></div>
-
-                        <div class="edit-field"><label class="edit-label">Web Name</label><input id="edit-web-name" type="text" class="sf-input-box"></div>
-                        <div class="edit-field"><label class="edit-label">Web Phone</label><input id="edit-web-phone" type="text" class="sf-input-box"></div>
-                        
-                        <div class="edit-field"><label class="edit-label">Date/Time Opened</label><div class="field-value" style="padding-left:0" id="edit-opened-date">--</div></div>
-                        <div class="edit-field"><label class="edit-label">Date/Time Closed</label><input id="edit-closed" type="text" class="sf-input-box"></div>
-
-                        <div class="edit-field">
-                            <label class="edit-label">Product</label>
-                            <select id="edit-product" class="sf-input-box"><option>--None--</option></select>
-                        </div>
-                        <div class="edit-field"><label class="edit-label">Engineering Req Number</label><input id="edit-eng-req" type="text" class="sf-input-box"></div>
-
-                        <div class="edit-field">
-                            <label class="edit-label">Potential Liability</label>
-                            <select id="edit-liability" class="sf-input-box"><option>--None--</option></select>
-                        </div>
-                        <div class="edit-field">
-                            <label class="edit-label">SLA Violation</label>
-                            <select id="edit-sla" class="sf-input-box"><option>--None--</option></select>
-                        </div>
-
-                        <div class="edit-field"><label class="edit-label">Created By</label><div class="field-value" style="padding-left:0" id="edit-created-by">--</div></div>
-                        <div class="edit-field"><label class="edit-label">Last Modified By</label><div class="field-value" style="padding-left:0" id="edit-modified-by">--</div></div>
-
-                        <div class="edit-field" style="grid-column: span 2;">
-                            <label class="edit-label">Subject</label>
-                            <input id="edit-subject" type="text" class="sf-input-box">
-                        </div>
-                        <div class="edit-field" style="grid-column: span 2;">
-                            <label class="edit-label">Description</label>
-                            <textarea id="edit-description" class="sf-textarea"></textarea>
-                        </div>
-                        <div class="edit-field" style="grid-column: span 2;">
-                            <label class="edit-label">Internal Comments</label>
-                            <textarea id="edit-comments" class="sf-textarea"></textarea>
-                        </div>
-
-                        <div style="grid-column: span 2; margin-top: 10px; margin-bottom: 20px;">
-                            <a href="#" style="color:#0176d3; text-decoration:none; font-size:0.8125rem;">Up-sell / Cross-sell Opportunity</a>
-                        </div>
-                    </div>
-
-                    <div class="edit-footer-bar">
-                        <button class="sf-btn sf-btn-neutral" onclick="cancelEditMode()">Cancel</button>
-                        <button class="sf-btn sf-btn-brand" onclick="saveEditMode()">Save</button>
-                    </div>
-                </div>
-            </div>
+            This view is kept for legacy support.
         </div>
     </div>
 
@@ -600,12 +472,8 @@
                     <div class="search-label"><span class="required">*</span> Select New Owner</div>
                     <div class="search-box"><div class="user-icon"><i class="fas fa-user"></i></div><input id="new-owner-input" type="text" placeholder="Search Users..."><i class="fas fa-search" style="color:#706e6b;"></i></div>
                 </div>
-                <div style="display:flex; align-items:center; margin-bottom:20px;">
-                    <input type="checkbox" id="notify" style="margin-right:8px;"><label for="notify" style="font-size:0.8125rem; color:#080707;">Send notification email</label>
-                </div>
-                <div style="font-size:0.8125rem; color:#080707;">The new owner will also become the owner of these records related to <strong id="modal-case-id">--</strong> that are owned by <strong>you</strong>. <ul style="margin-top:8px; padding-left:20px; list-style-type:disc; color:#080707;"><li>Notes and attachments</li><li>Open activities</li></ul></div>
             </div>
-            <div class="modal-footer"><button class="sf-btn" onclick="closeOwnerModal()">Cancel</button><button class="sf-btn sf-btn-brand" onclick="runChangeOwner()">Change Owner</button></div>
+            <div class="modal-footer"><button class="sf-btn" onclick="closeOwnerModal()">Cancel</button><button class="sf-btn sf-btn-brand">Change Owner</button></div>
         </div>
     </div>
 
@@ -766,7 +634,7 @@
                         </div>
                         <div class="form-group">
                             <label><span style="color:#ea001e">*</span> Case Origin</label>
-                            <select id="new-case-origin" class="sf-input-box"><option>--None--</option><option>Phone</option><option>Web</option><option>Email</option></select>
+                            <select id="new-case-origin" class="sf-input-box"><option>Web</option><option>Phone</option><option>Email</option></select>
                         </div>
                     </div>
                 </div>
@@ -832,109 +700,270 @@
         <i class="fas fa-times" style="margin-left:auto; cursor:pointer; font-size:1rem; opacity:0.6;" onclick="hideToast()"></i>
     </div>
 
-    <div id="loading-overlay"><div class="spinner-circle"></div><div style="font-weight: bold; color: #0176d3; margin-top:10px;">Automating Assignment...</div></div>
+    <div id="loading-overlay"><div class="spinner-circle"></div><div style="font-weight: bold; color: #0176d3; margin-top:10px;">Automating...</div></div>
+
+    <!-- Floating Action Button -->
+    <button class="demo-fab" onclick="startAutomation()" title="Run Demo"><i class="fas fa-play"></i> Start Demo</button>
 
     <script>
         // --- CONFIGURATION ---
-        const PANTRY_ID = 'c64d05d8-dc6b-42a6-9f46-7b78d8732d35'; 
-        const PANTRY_URL = `https://getpantry.cloud/apiv1/pantry/${PANTRY_ID}/basket/salesforce`;
-        
-        // ** DEMO CONFIG **
-        const DEMO_DELAY = 4000; 
+        const N8N_WEBHOOK_URL = 'https://aipblueocean.app.n8n.cloud/webhook/bcceb884-2cf4-4c6d-921c-a1ce2e93a40d'; 
+        const DEMO_DELAY = 4000;  // Increased to 4 seconds
+        const ASSIGNMENT_DELAY = 2500; // 2.5 seconds per row
 
         // State
-        let previousDataString = "";
         let flowStarted = false; 
-        let isCaseViewActive = false; // Flag to gate owner updates
-        let currentOwnerState = "Matthew McCullough"; // Internal tracker to prevent duplicates
+        let currentQueue = []; 
+        let createdCases = []; 
         
-        // Temp Storage for Flow
-        let tempContactName = "";
-        let tempContactEmail = "";
-        let tempLicenseType = "";
-        let tempCaseId = "";
-        let tempCaseTime = "";
+        // Storage for the contact info derived from the first webhook item
+        let activeContactName = "";
+        let activeContactEmail = "";
 
-        // Modal Logic
-        function openOwnerModal() { document.getElementById('ownerModal').style.display = 'flex'; }
-        function closeOwnerModal() { document.getElementById('ownerModal').style.display = 'none'; }
-        
-        // --- 1. NEW CONTACT FLOW ---
-        function openNewContactModal(name, email, license) {
+        // --- NAVIGATION HANDLERS ---
+        // Allows clicking around before, during, or after the demo
+        function showContactsView() {
+            document.getElementById('list-view-container').style.display = 'flex';
+            document.getElementById('case-list-container').style.display = 'none';
+            
+            document.getElementById('nav-contacts').classList.add('active');
+            document.getElementById('nav-cases').classList.remove('active');
+        }
+
+        function showCasesView() {
+            document.getElementById('list-view-container').style.display = 'none';
+            document.getElementById('case-list-container').style.display = 'flex';
+
+            document.getElementById('nav-contacts').classList.remove('active');
+            document.getElementById('nav-cases').classList.add('active');
+        }
+
+        // Bind clicks
+        document.getElementById('nav-contacts').addEventListener('click', showContactsView);
+        document.getElementById('nav-cases').addEventListener('click', showCasesView);
+
+
+        // --- 1. CONTACT CREATION FLOW ---
+        function startAutomation() {
+            if(flowStarted) return;
+            flowStarted = true;
+            
+            // Ensure we start visually on the Contact screen
+            showContactsView();
+
+            console.log("Simulating Incoming Webhook from n8n...");
+            showToast("Initializing Webhook Connection...");
+            
+            // FETCH DATA
+            fetch(N8N_WEBHOOK_URL)
+                .then(response => response.json())
+                .then(data => {
+                    showToast("Incoming Webhook Data Received");
+                    
+                    if (Array.isArray(data) && data.length > 0) {
+                        currentQueue = data;
+                        // Use first record to establish Contact context
+                        activeContactName = data[0].Contact_Name;
+                        activeContactEmail = data[0].Contact_Email;
+                        
+                        setTimeout(() => {
+                            // Step 1: Create Contact using dynamic data
+                            openNewContactModal();
+                        }, 2000); 
+                    } else {
+                        showToast("No data received from Webhook.");
+                        flowStarted = false; // Reset if failed
+                    }
+                })
+                .catch(err => {
+                    console.error("Webhook Error:", err);
+                    showToast("Error: No data available from Webhook.");
+                    flowStarted = false; // Reset if failed
+                });
+        }
+
+        function openNewContactModal() {
             document.getElementById('newContactModal').style.display = 'flex';
             
-            const nameParts = name ? name.split(' ') : ['',''];
+            const nameParts = activeContactName ? activeContactName.split(' ') : ['',''];
             document.getElementById('new-contact-first').value = nameParts[0] || '';
             document.getElementById('new-contact-last').value = nameParts.slice(1).join(' ') || '';
-            document.getElementById('new-contact-email').value = email || '';
+            document.getElementById('new-contact-email').value = activeContactEmail || '';
             
-            tempContactName = name;
-            tempContactEmail = email;
-            tempLicenseType = license || "Request for License";
-            
+            // Auto Save
             setTimeout(() => {
                 saveNewContact();
             }, DEMO_DELAY);
         }
+
         function closeNewContactModal() { document.getElementById('newContactModal').style.display = 'none'; }
 
         function saveNewContact() {
             closeNewContactModal();
+            const contactName = activeContactName || "Unknown Applicant";
             
-            // --- NEW: Add row to the Contacts table ---
+            // Add to Contact Table (Visual only)
             const tableBody = document.getElementById('contact-table-body');
-            const newRow = tableBody.insertRow(0); // Insert at top
+            const newRow = tableBody.insertRow(0);
             newRow.style.animation = "fadeIn 0.5s ease-in-out"; 
             newRow.innerHTML = `
                 <td><input type="checkbox"></td>
-                <td><a href="#" style="color:#0176d3; text-decoration:none;">${tempContactName}</a></td>
+                <td><a href="#" style="color:#0176d3; text-decoration:none;">${contactName}</a></td>
                 <td><i class="far fa-bookmark" style="color:#dddbda;"></i></td>
                 <td></td><td></td><td>Just now</td>
-                <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div><div class="row-action-btn"><i class="fas fa-phone"></i></div><div class="row-action-btn" style="border:none;"><i class="fas fa-caret-down"></i></div></td>
+                <td><div class="row-action-btn"><i class="fas fa-envelope"></i></div></td>
             `;
 
-            // --- NEW: Update Contact Count (Banner) ---
-            const countEl = document.getElementById('metric-total-contacts');
-            if(countEl) {
-                countEl.innerText = parseInt(countEl.innerText) + 1;
-            }
-
-            // --- NEW: Update List Info Count (Below Banner) ---
-            const listInfo = document.getElementById('list-info-text');
-            if(listInfo) {
-                const currentVal = parseInt(listInfo.innerText);
-                // Replace first occurrence of number (e.g., "5" -> "6")
-                listInfo.innerText = listInfo.innerText.replace(currentVal, currentVal + 1);
-            }
-            // ------------------------------------------
-
-            showToast(`Contact "${tempContactName}" was created.`);
+            // Update Contact Count Logic
+            const totalContactsEl = document.getElementById('metric-total-contacts');
+            let currentCount = parseInt(totalContactsEl.innerText);
+            let newCount = currentCount + 1;
+            totalContactsEl.innerText = newCount;
+            document.getElementById('list-info-text').innerText = `${newCount} items • Filtered by Created Date, Me`;
             
+            showToast(`Contact "${contactName}" created.`);
+            
+            // Step 2: Navigate to Empty Case Page
             setTimeout(() => {
-                openNewCaseModal();
-            }, DEMO_DELAY); 
+                navigateToCaseList();
+            }, 3000); 
         }
 
-        // --- 2. NEW CASE FLOW ---
-        function openNewCaseModal() {
-            document.getElementById('newCaseModal').style.display = 'flex';
-            document.getElementById('new-case-contact').value = tempContactName;
+        // --- 2. CASE LIST NAVIGATION ---
+        function navigateToCaseList() {
+            showCasesView(); // Use the shared function
             
-            // MODIFIED: Ensure description explicitly includes the License Type label
-            const descriptionVal = tempLicenseType ? `License Type: ${tempLicenseType}` : "License Type: Not Specified";
-            document.getElementById('new-case-description').value = descriptionVal;
-            
+            showToast("Navigated to Cases (Empty View)");
+
+            // Step 3: Process Cases from JSON
             setTimeout(() => {
-               saveNewCase(); 
+                processNextCase();
+            }, 2000);
+        }
+
+        // --- 3. CASE CREATION LOOP ---
+        function processNextCase() {
+            if(currentQueue.length === 0) {
+                showToast("All cases created. Running Assignment Rules...");
+                runAssignmentRules();
+                return;
+            }
+
+            const item = currentQueue.shift(); // Get next item
+            openNewCaseModalForData(item);
+        }
+
+        function openNewCaseModalForData(data) {
+            document.getElementById('newCaseModal').style.display = 'flex';
+            
+            // Populate Fields from Data
+            document.getElementById('new-case-contact').value = data.Contact_Name;
+            document.getElementById('new-case-subject').value = `Request for License: ${data.License_Type} (${data.Country})`;
+            document.getElementById('new-case-description').value = `Requesting license for ${data.Country}.\nBase Price: $${data.Base_Price}`;
+            
+            // Store current PM for later assignment logic
+            document.getElementById('newCaseModal').dataset.pmName = data.PM_Name;
+            
+            // Auto Save
+            setTimeout(() => {
+                saveNewCase(data.PM_Name);
             }, DEMO_DELAY);
         }
+
         function closeNewCaseModal() { document.getElementById('newCaseModal').style.display = 'none'; }
 
-        function saveNewCase() {
-             closeNewCaseModal();
-             transitionToCaseView();
+        function saveNewCase(pmName) {
+            closeNewCaseModal();
+            
+            // Generate ID
+            const randomDigits = Math.floor(1000 + Math.random() * 9000);
+            const caseId = `0000${randomDigits}`;
+            
+            const subject = document.getElementById('new-case-subject').value;
+            const status = "New";
+            const priority = "Medium";
+            const owner = "Matthew McCullough"; // Default owner (Me) before assignment
+            
+            // Add to Case List Table
+            const tableBody = document.getElementById('case-table-body');
+            const newRow = tableBody.insertRow(0);
+            newRow.id = `row-${caseId}`;
+            newRow.dataset.pm = pmName; // Store intended PM
+            newRow.style.animation = "fadeIn 0.5s ease-in-out"; 
+            newRow.innerHTML = `
+                <td><input type="checkbox"></td>
+                <td><a href="#" style="color:#0176d3; text-decoration:none;">${caseId}</a></td>
+                <td>${subject}</td>
+                <td><a href="#" style="color:#0176d3; text-decoration:none;">${activeContactName}</a></td>
+                <td>${status}</td>
+                <td>${priority}</td>
+                <td class="owner-cell">
+                    <img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px; vertical-align:middle;">
+                    <a href="#">${owner}</a>
+                </td>
+                <td><div class="row-action-btn"><i class="fas fa-caret-down"></i></div></td>
+            `;
+            
+            createdCases.push(caseId);
+            updateCaseCount();
+            showToast(`Case ${caseId} created.`);
+            
+            // Loop Next
+            setTimeout(() => {
+                processNextCase();
+            }, 2000);
         }
 
+        function updateCaseCount() {
+            const count = document.getElementById('case-table-body').rows.length;
+            document.getElementById('metric-total-cases').innerText = count;
+            document.getElementById('case-list-info-text').innerText = `${count} items`;
+        }
+
+        // --- 4. ASSIGNMENT LOGIC ---
+        function runAssignmentRules() {
+            // Iterate through rows and update owners
+            const rows = document.getElementById('case-table-body').rows;
+            
+            let delay = 0;
+            Array.from(rows).forEach(row => {
+                const targetPM = row.dataset.pm;
+                if(targetPM) {
+                    delay += ASSIGNMENT_DELAY;
+                    setTimeout(() => {
+                        updateRowOwner(row, targetPM);
+                    }, delay);
+                }
+            });
+            
+            // End of demo - user can click around
+            setTimeout(() => {
+                flowStarted = false; // Allow restart if desired, or just end
+                showToast("Demo Complete.");
+            }, delay + 1000);
+        }
+
+        function updateRowOwner(row, newOwner) {
+            const ownerCell = row.querySelector('.owner-cell');
+            
+            // Highlight effect
+            row.style.backgroundColor = "#fff9c4";
+            
+            // Update HTML
+            ownerCell.innerHTML = `
+                <div style="width:20px; height:20px; background:#7f8de1; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:white; font-size:0.7rem; margin-right:5px; vertical-align:middle;"><i class="fas fa-user"></i></div>
+                <a href="#">${newOwner}</a>
+            `;
+            
+            showToast(`Assigned to ${newOwner}`);
+            
+            // Remove highlight
+            setTimeout(() => {
+                row.style.backgroundColor = "white";
+            }, 1000);
+        }
+
+        // --- UTILS ---
         function showToast(message) {
             const toast = document.getElementById('toast-notification');
             document.getElementById('toast-message').innerText = message;
@@ -942,149 +971,10 @@
             setTimeout(() => { toast.style.display = 'none'; }, 3000);
         }
         function hideToast() { document.getElementById('toast-notification').style.display = 'none'; }
-
-        function transitionToCaseView() {
-            // GENERATE RANDOM CASE NUMBER (8 digits, starting with 0000)
-            const randomDigits = Math.floor(1000 + Math.random() * 9000);
-            tempCaseId = `0000${randomDigits}`;
-
-            document.getElementById('list-view-container').style.display = 'none';
-            document.getElementById('case-view-container').style.display = 'flex';
-            document.getElementById('nav-cases').classList.add('active');
-
-            // Set dynamic time
-            const now = new Date();
-            tempCaseTime = now.toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
-            
-            // UI CONSISTENCY FOR CASE ID
-            document.getElementById('header-case-id').innerText = tempCaseId;
-            document.getElementById('hl-case-id').innerText = tempCaseId;
-            document.getElementById('feed-case-id').innerText = tempCaseId;
-            document.getElementById('detail-case-id').innerText = tempCaseId;
-            document.getElementById('edit-case-id-display').innerText = tempCaseId;
-            document.getElementById('modal-case-id').innerText = tempCaseId;
-
-            // POPULATE DATA
-            document.getElementById('view-contact').innerHTML = `<a href="#">${tempContactName}</a>`;
-            document.getElementById('view-cemail').innerHTML = `<a href="#">${tempContactEmail}</a>`;
-            document.getElementById('view-subject').innerText = "Request for License";
-            
-            // MODIFIED: Read from the modal input so the Description matches exactly what was shown
-            document.getElementById('view-description').innerText = document.getElementById('new-case-description').value;
-            
-            document.getElementById('detail-opened-date').innerText = tempCaseTime;
-            
-            const userImg = '<img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px;">';
-            document.getElementById('detail-created-by').innerHTML = `${userImg} Matthew McCullough, ${tempCaseTime}`;
-            document.getElementById('detail-modified-by').innerHTML = `${userImg} Matthew McCullough, ${tempCaseTime}`;
-            
-            // --- ENABLE OWNER UPDATES & RESET UI ---
-            isCaseViewActive = true;
-            currentOwnerState = "Matthew McCullough"; 
-
-            const ownerHTML = `${userImg} <a href="#">Matthew McCullough</a> <i class="fas fa-user-friends" style="color:#0176d3; margin-left: auto; font-size: 0.8rem; cursor: pointer;" onclick="openOwnerModal()" title="Change Owner"></i>`;
-            document.getElementById('detail-owner').innerHTML = ownerHTML;
-            document.getElementById('edit-owner-display').innerHTML = `${userImg} Matthew McCullough`;
-
-            showToast(`Case "${tempCaseId}" was created.`);
-        }
-
-        function runChangeOwner(newOwnerName) {
-            // --- 3-Second Delay before applying changes ---
-            setTimeout(() => {
-                document.getElementById('hl-status').innerText = 'Working';
-                document.getElementById('view-status').innerText = 'Working';
-                
-                const ownerField = document.getElementById('detail-owner');
-                ownerField.innerHTML = `
-                    <img src="https://www.salesforce.com/news/wp-content/uploads/sites/3/2021/05/Salesforce-Logo.png" style="width:20px; border-radius:50%; margin-right:5px;">
-                    <a href="#">${newOwnerName}</a>
-                    <i class="fas fa-user-friends" style="color:#0176d3; margin-left: auto; font-size: 0.8rem; cursor: pointer;" onclick="openOwnerModal()" title="Change Owner"></i>
-                `;
-
-                const feedAnchor = document.getElementById('feed-anchor');
-                const newFeedItemHTML = `
-                <div class="feed-item" style="animation: fadeIn 0.5s ease-in-out;">
-                    <div class="avatar bot"><i class="fas fa-robot"></i></div>
-                    <div class="feed-content">
-                        <div class="feed-header"><i class="fas fa-chevron-right" style="font-size:0.7rem; color:#706e6b; margin-right:5px;"></i><a href="#">System Automation</a> <span style="font-size:0.7rem; background:#04844b; color:white; padding:1px 4px; border-radius:2px; margin-left:4px;">Record Updated</span></div>
-                        <div style="margin-left:15px; margin-top:5px; background:#f4fbf7; padding:10px; border:1px solid #c1eac5; border-radius:4px;">
-                            <div style="font-size:0.8125rem;">Changed <strong>Case Owner</strong> to <a href="#">${newOwnerName}</a></div>
-                            <div style="font-size:0.8125rem;">Changed <strong>Status</strong> to <strong>Working</strong></div>
-                        </div>
-                        <div class="feed-info" style="margin-left:15px;">Just now</div>
-                    </div>
-                </div>`;
-                feedAnchor.insertAdjacentHTML('afterend', newFeedItemHTML);
-
-                const row = document.getElementById('owner-row');
-                row.style.backgroundColor = "#fff9c4";
-                setTimeout(() => { row.style.backgroundColor = "white"; }, 2000);
-            }, 3000); 
-        }
-
-        // Get Pantry is down, so we'll use a local simulation instead
-        // setInterval(() => {
-        //     fetch(PANTRY_URL + '?_t=' + new Date().getTime())
-        //         .then(response => { if(response.ok) return response.json(); return {}; })
-        //         .then(data => {
-        //             // 1. Contact Flow Trigger (Run Once)
-        //             if (data && data.contact_name && !flowStarted) {
-        //                 flowStarted = true;
-        //                 openNewContactModal(data.contact_name, data.contact_email, data.license_type);
-        //             }
-
-        //             // 2. Owner Update Trigger (Gated by Case View & Change Detection)
-        //             // Only run if case view is active AND the data owner differs from our internal tracker
-        //             if (isCaseViewActive && data.owner && data.owner !== currentOwnerState) {
-        //                 currentOwnerState = data.owner; // Lock tracker immediately to prevent double-fire
-        //                 runChangeOwner(data.owner);
-        //             }
-        //         }).catch(err => {});
-        // }, 1000); 
-
-        // --- REPLACEMENT CODE: LOCAL SIMULATION (No API needed) ---
         
-        // 1. Trigger the "New Contact" flow automatically after 2 seconds
-        setTimeout(() => {
-            if (!flowStarted) {
-                console.log("Simulating Incoming Webhook: New Contact");
-                flowStarted = true;
-                // You can change these values to whatever you want for the demo
-                openNewContactModal("Henry James", "henry.james@company.com", "Terminator Insurance");
-            }
-        }, 2000);
+        function openOwnerModal() { document.getElementById('ownerModal').style.display = 'flex'; }
+        function closeOwnerModal() { document.getElementById('ownerModal').style.display = 'none'; }
 
-        // 2. Monitor for Case View, then trigger "Owner Change" flow
-        const simulationCheck = setInterval(() => {
-            // Only trigger if we are in Case View AND the owner hasn't changed yet
-            if (isCaseViewActive && currentOwnerState === "Matthew McCullough") {
-                
-                // Stop checking so we don't trigger it twice
-                clearInterval(simulationCheck); 
-                
-                console.log("Case View active. Queuing Owner Change...");
-                
-                // Wait 5 seconds after screen load to make it look realistic
-                setTimeout(() => {
-                    console.log("Simulating Incoming Webhook: Owner Change");
-                    // Lock the state tracker
-                    currentOwnerState = "Sarah Jenkins"; 
-                    // Run the update
-                    runChangeOwner("Sarah Jenkins");
-                }, 5000); 
-            }
-        }, 1000);
-
-        // --- OPTIONAL: MANUAL TRIGGERS ---
-        // Type these in the browser console (F12) if you want to control the exact timing:
-        // window.triggerContact = () => openNewContactModal("John Doe", "john@example.com", "Manual License");
-        // window.triggerOwner = () => runChangeOwner("Jane Doe");
-
-        const fields = ['status', 'priority', 'contact', 'cphone', 'account', 'cemail', 'type', 'origin', 'reason', 'web-email', 'web-company', 'web-name', 'web-phone', 'closed', 'product', 'eng-req', 'liability', 'sla', 'subject', 'description', 'comments'];
-        function enableEditMode() { fields.forEach(f => { const v = document.getElementById('view-' + f); const e = document.getElementById('edit-' + f); if(v && e) e.value = v.innerText; }); document.getElementById('details-view-mode').style.display = 'none'; document.getElementById('details-edit-mode').style.display = 'flex'; }
-        function cancelEditMode() { document.getElementById('details-edit-mode').style.display = 'none'; document.getElementById('details-view-mode').style.display = 'grid'; }
-        function saveEditMode() { fields.forEach(f => { const v = document.getElementById('view-' + f); const e = document.getElementById('edit-' + f); if(v && e) v.innerText = e.value; }); document.getElementById('hl-status').innerText = document.getElementById('edit-status').value; cancelEditMode(); }
     </script>
 </body>
 </html>
